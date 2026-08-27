@@ -1,5 +1,6 @@
 # Virtual environment
 .venv/
+.venv-1/
 
 # Environment variables
 .env
@@ -35,3 +36,4 @@ logs/
 # Temporary
 *.tmp
 *.temp
+
