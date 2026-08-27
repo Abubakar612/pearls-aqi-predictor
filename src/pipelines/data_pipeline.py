@@ -1,12 +1,25 @@
 """
 Production data preparation pipeline.
 
-Builds the ML dataset from the raw historical source:
-1. Historical JSON cleaning
-2. AQI calculation
-3. Forecast target generation
-4. Forecast feature engineering
+Builds the ML dataset from the latest S3 realtime dataset.
+
+Daily production flow:
+1. Download latest Lahore hourly CSV from S3
+2. Clean/validate the hourly data
+3. Calculate AQI
+4. Create forecast targets
+5. Create forecast features
+6. Save the ML dataset for model training
+
+The existing local historical JSON workflow remains supported.
 """
+
+import os
+from io import BytesIO
+from pathlib import Path
+
+import boto3
+import pandas as pd
 
 from src.data.historical_cleaner import (
     clean_historical_data
@@ -25,8 +38,10 @@ from src.features.forecast_features import (
     select_features
 )
 
-from pathlib import Path
 
+# ============================================================
+# PATHS
+# ============================================================
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
@@ -39,16 +54,193 @@ PROCESSED_DIR = (
 )
 
 
-def run_data_pipeline():
+# ============================================================
+# AWS CONFIGURATION
+# ============================================================
 
-    print("=" * 60)
-    print("PEARLS AQI PREDICTOR")
-    print("DATA PREPARATION PIPELINE")
-    print("=" * 60)
+S3_BUCKET = os.environ.get(
+    "S3_BUCKET",
+    "pearls-aqi-predictor-071493957773"
+)
+
+S3_REALTIME_KEY = os.environ.get(
+    "S3_REALTIME_KEY",
+    "realtime/lahore_hourly.csv"
+)
+
+
+# ============================================================
+# REQUIRED RAW COLUMNS
+# ============================================================
+
+REQUIRED_COLUMNS = [
+    "timestamp",
+    "temperature",
+    "humidity",
+    "dew_point",
+    "feels_like",
+    "pressure",
+    "surface_pressure",
+    "clouds",
+    "wind_speed",
+    "wind_direction",
+    "wind_gust",
+    "precipitation",
+    "pm10",
+    "pm2_5",
+    "co",
+    "no2",
+    "so2",
+    "o3",
+]
+
+
+# ============================================================
+# LOAD S3 REALTIME DATA
+# ============================================================
+
+def load_realtime_from_s3():
+
+    print(
+        f"\nDownloading latest realtime dataset:"
+        f"\ns3://{S3_BUCKET}/{S3_REALTIME_KEY}"
+    )
+
+    s3 = boto3.client("s3")
+
+    response = s3.get_object(
+        Bucket=S3_BUCKET,
+        Key=S3_REALTIME_KEY
+    )
+
+    df = pd.read_csv(
+        BytesIO(
+            response["Body"].read()
+        )
+    )
+
+    print(
+        f"S3 dataset shape: {df.shape}"
+    )
+
+    return df
+
+
+# ============================================================
+# VALIDATE REALTIME DATA
+# ============================================================
+
+def validate_realtime_data(df):
+
+    print(
+        "\nValidating realtime dataset..."
+    )
+
+    missing_columns = [
+        column
+        for column in REQUIRED_COLUMNS
+        if column not in df.columns
+    ]
+
+    if missing_columns:
+
+        raise ValueError(
+            "Missing required columns: "
+            + ", ".join(missing_columns)
+        )
+
+    if df.empty:
+
+        raise ValueError(
+            "Realtime dataset is empty."
+        )
+
+    df = df.loc[
+        :,
+        ~df.columns.duplicated()
+    ]
+
+    df["timestamp"] = pd.to_datetime(
+        df["timestamp"],
+        utc=True
+    )
+
+    df = (
+        df
+        .sort_values("timestamp")
+        .drop_duplicates(
+            subset=["timestamp"]
+        )
+        .reset_index(drop=True)
+    )
+
+    print(
+        f"Rows: {len(df)}"
+    )
+
+    print(
+        f"Columns: {len(df.columns)}"
+    )
+
+    print(
+        f"Date range: "
+        f"{df['timestamp'].min()} "
+        f"-> "
+        f"{df['timestamp'].max()}"
+    )
+
+    duplicate_count = (
+        df["timestamp"]
+        .duplicated()
+        .sum()
+    )
+
+    print(
+        f"Duplicate timestamps: "
+        f"{duplicate_count}"
+    )
+
+    if duplicate_count > 0:
+
+        raise ValueError(
+            "Duplicate timestamps remain."
+        )
+
+    print(
+        "Realtime dataset validation: PASSED"
+    )
+
+    return df
+
+
+# ============================================================
+# LOAD TRAINING SOURCE
+# ============================================================
+
+def load_training_source():
+
+    use_s3 = os.environ.get(
+        "USE_S3_TRAINING_DATA",
+        "true"
+    ).lower() == "true"
+
+    if use_s3:
+
+        print(
+            "\nTraining source: S3 realtime dataset"
+        )
+
+        df = load_realtime_from_s3()
+
+        return validate_realtime_data(df)
 
     # --------------------------------------------------------
-    # 1. Find historical source
+    # Local fallback
     # --------------------------------------------------------
+
+    print(
+        "\nTraining source: local historical JSON"
+    )
 
     files = sorted(
         HISTORICAL_DIR.glob(
@@ -57,6 +249,7 @@ def run_data_pipeline():
     )
 
     if not files:
+
         raise FileNotFoundError(
             "No historical JSON dataset found."
         )
@@ -68,22 +261,46 @@ def run_data_pipeline():
         f"{input_file}"
     )
 
+    df = clean_historical_data(
+        input_file
+    )
+
+    return df
+
+
+# ============================================================
+# MAIN DATA PIPELINE
+# ============================================================
+
+def run_data_pipeline():
+
+    print("=" * 60)
+    print("PEARLS AQI PREDICTOR")
+    print("DATA PREPARATION PIPELINE")
+    print("=" * 60)
+
     PROCESSED_DIR.mkdir(
         parents=True,
         exist_ok=True
     )
 
     # --------------------------------------------------------
-    # 2. Clean historical data
+    # 1. Load training data
     # --------------------------------------------------------
 
     print(
-        "\n[1/4] Cleaning historical data..."
+        "\n[1/5] Loading training data..."
     )
 
-    df = clean_historical_data(
-        input_file
+    df = load_training_source()
+
+    print(
+        f"Training source shape: {df.shape}"
     )
+
+    # --------------------------------------------------------
+    # Save cleaned historical data
+    # --------------------------------------------------------
 
     cleaned_file = (
         PROCESSED_DIR
@@ -100,11 +317,11 @@ def run_data_pipeline():
     )
 
     # --------------------------------------------------------
-    # 3. Calculate AQI
+    # 2. Calculate AQI
     # --------------------------------------------------------
 
     print(
-        "\n[2/4] Calculating AQI..."
+        "\n[2/5] Calculating AQI..."
     )
 
     df = calculate_aqi(df)
@@ -124,11 +341,11 @@ def run_data_pipeline():
     )
 
     # --------------------------------------------------------
-    # 4. Create forecast dataset
+    # 3. Create forecast targets
     # --------------------------------------------------------
 
     print(
-        "\n[3/4] Creating forecast targets..."
+        "\n[3/5] Creating forecast targets..."
     )
 
     df = create_forecast_targets(
@@ -158,11 +375,11 @@ def run_data_pipeline():
     )
 
     # --------------------------------------------------------
-    # 5. Create ML dataset
+    # 4. Create ML features
     # --------------------------------------------------------
 
     print(
-        "\n[4/4] Creating ML features..."
+        "\n[4/5] Creating ML features..."
     )
 
     df = create_features(
@@ -186,6 +403,19 @@ def run_data_pipeline():
         *target_columns,
     ]
 
+    missing_columns = [
+        column
+        for column in required_columns
+        if column not in df.columns
+    ]
+
+    if missing_columns:
+
+        raise ValueError(
+            "Missing ML columns: "
+            + ", ".join(missing_columns)
+        )
+
     ml_df = df[
         required_columns
     ].copy()
@@ -201,6 +431,20 @@ def run_data_pipeline():
         ml_df
         .sort_values("timestamp")
         .reset_index(drop=True)
+    )
+
+    if ml_df.empty:
+
+        raise ValueError(
+            "ML dataset is empty after removing incomplete rows."
+        )
+
+    # --------------------------------------------------------
+    # 5. Save ML dataset
+    # --------------------------------------------------------
+
+    print(
+        "\n[5/5] Saving ML dataset..."
     )
 
     ml_file = (
@@ -225,6 +469,13 @@ def run_data_pipeline():
     print(
         f"Feature count: "
         f"{len(feature_columns)}"
+    )
+
+    print(
+        f"Training date range: "
+        f"{ml_df['timestamp'].min()} "
+        f"-> "
+        f"{ml_df['timestamp'].max()}"
     )
 
     print(

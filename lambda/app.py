@@ -1,22 +1,10 @@
 import json
 import os
+from io import BytesIO
+
 import boto3
 import joblib
 import pandas as pd
-from pathlib import Path
-
-
-# ============================================================
-# PATHS
-# ============================================================
-
-BASE_DIR = Path("/var/task")
-
-MODEL_DIR = (
-    BASE_DIR
-    / "models"
-    / "production"
-)
 
 
 # ============================================================
@@ -35,6 +23,11 @@ FORECAST_KEY = os.environ.get(
     "realtime/latest_forecast.json"
 )
 
+MODEL_PREFIX = os.environ.get(
+    "MODEL_PREFIX",
+    "models/production/"
+)
+
 s3_client = boto3.client("s3")
 
 
@@ -48,6 +41,8 @@ MODEL_FILES = {
     "72h": "aqi_model_72h.joblib",
 }
 
+FEATURE_FILE = "feature_list.json"
+
 
 # ============================================================
 # AQI CATEGORY
@@ -58,110 +53,113 @@ def get_aqi_category(aqi):
     if aqi <= 50:
         return "Good"
 
-    elif aqi <= 100:
+    if aqi <= 100:
         return "Moderate"
 
-    elif aqi <= 150:
+    if aqi <= 150:
         return "Unhealthy for Sensitive Groups"
 
-    elif aqi <= 200:
+    if aqi <= 200:
         return "Unhealthy"
 
-    elif aqi <= 300:
+    if aqi <= 300:
         return "Very Unhealthy"
 
-    else:
-        return "Hazardous"
+    return "Hazardous"
+
+
+# ============================================================
+# LOAD MODEL FROM S3
+# ============================================================
+
+def load_model_from_s3(filename):
+
+    key = f"{MODEL_PREFIX}{filename}"
+
+    print(
+        f"Loading model from "
+        f"s3://{S3_BUCKET}/{key}"
+    )
+
+    response = s3_client.get_object(
+        Bucket=S3_BUCKET,
+        Key=key
+    )
+
+    model_bytes = response["Body"].read()
+
+    return joblib.load(
+        BytesIO(model_bytes)
+    )
 
 
 # ============================================================
 # LOAD PRODUCTION MODELS
 # ============================================================
 
-print("Loading production models...")
+def load_production_models():
 
-MODELS = {}
+    models = {}
 
-for horizon, filename in MODEL_FILES.items():
+    for horizon, filename in MODEL_FILES.items():
 
-    model_path = MODEL_DIR / filename
-
-    if not model_path.exists():
-
-        raise FileNotFoundError(
-            f"Model not found: {model_path}"
+        models[horizon] = load_model_from_s3(
+            filename
         )
 
-    MODELS[horizon] = joblib.load(
-        model_path
+    print(
+        f"Loaded {len(models)} production models."
     )
 
-print(
-    f"Loaded {len(MODELS)} production models."
-)
+    return models
 
 
 # ============================================================
 # LOAD FEATURE LIST
 # ============================================================
 
-FEATURE_FILE = (
-    MODEL_DIR
-    / "feature_list.json"
-)
+def load_feature_list():
 
-with open(
-    FEATURE_FILE,
-    "r",
-    encoding="utf-8"
-) as f:
+    key = f"{MODEL_PREFIX}{FEATURE_FILE}"
 
-    FEATURE_LIST = json.load(f)
+    print(
+        f"Loading feature list from "
+        f"s3://{S3_BUCKET}/{key}"
+    )
 
+    response = s3_client.get_object(
+        Bucket=S3_BUCKET,
+        Key=key
+    )
 
-if isinstance(
-    FEATURE_LIST,
-    dict
-):
+    content = response["Body"].read().decode(
+        "utf-8"
+    )
 
-    FEATURE_LIST = FEATURE_LIST["features"]
+    features = json.loads(content)
 
+    if isinstance(features, dict):
 
-print(
-    f"Loaded {len(FEATURE_LIST)} features."
-)
+        if "features" in features:
+            features = features["features"]
 
+        else:
+            raise ValueError(
+                "feature_list.json does not contain "
+                "'features'."
+            )
 
-# ============================================================
-# STANDARD RESPONSE
-# ============================================================
+    if not isinstance(features, list) or not features:
 
-def response(
-    status_code,
-    body
-):
-
-    return {
-
-        "statusCode":
-        status_code,
-
-        "headers": {
-
-            "Content-Type":
-            "application/json",
-
-            "Access-Control-Allow-Origin":
-            "*"
-
-        },
-
-        "body":
-        json.dumps(
-            body
+        raise ValueError(
+            "Production feature list is empty or invalid."
         )
 
-    }
+    print(
+        f"Loaded {len(features)} features."
+    )
+
+    return features
 
 
 # ============================================================
@@ -175,13 +173,13 @@ def load_latest_features():
         f"s3://{S3_BUCKET}/{FEATURES_KEY}"
     )
 
-    s3_response = s3_client.get_object(
+    response = s3_client.get_object(
         Bucket=S3_BUCKET,
         Key=FEATURES_KEY
     )
 
     df = pd.read_csv(
-        s3_response["Body"]
+        response["Body"]
     )
 
     if df.empty:
@@ -190,110 +188,14 @@ def load_latest_features():
             "Latest features file is empty."
         )
 
-    # --------------------------------------------------------
-    # Verify required model features
-    # --------------------------------------------------------
-
-    missing = [
-
-        feature
-
-        for feature in FEATURE_LIST
-
-        if feature not in df.columns
-
-    ]
-
-    if missing:
-
-        raise ValueError(
-            "Missing model features in S3 file: "
-            f"{missing}"
-        )
-
-    # --------------------------------------------------------
-    # Use the latest available row
-    # --------------------------------------------------------
-
-    latest_row = df.iloc[-1]
-
-    # --------------------------------------------------------
-    # Extract model features
-    # --------------------------------------------------------
-
-    features = {
-
-        feature:
-        latest_row[feature]
-
-        for feature in FEATURE_LIST
-
-    }
-
-    # --------------------------------------------------------
-    # Determine current AQI
-    # --------------------------------------------------------
-
-    current_aqi = None
-
-    if "current_aqi" in df.columns:
-
-        current_aqi = latest_row[
-            "current_aqi"
-        ]
-
-    elif "target_aqi" in df.columns:
-
-        current_aqi = latest_row[
-            "target_aqi"
-        ]
-
-    # --------------------------------------------------------
-    # Extract timestamp
-    # --------------------------------------------------------
-
-    timestamp = None
-
-    if "timestamp" in df.columns:
-
-        timestamp = str(
-            latest_row[
-                "timestamp"
-            ]
-        )
-
-        pollutants = {
-        "pm25": float(latest_row["pm25_lag_12h"])
-            if "pm25_lag_12h" in df.columns else None,
-
-        "pm10": float(latest_row["pm10_rolling_mean_3h"])
-            if "pm10_rolling_mean_3h" in df.columns else None,
-
-        "no2": float(latest_row["no2"])
-            if "no2" in df.columns else None,
-
-        "o3": float(latest_row["o3"])
-            if "o3" in df.columns else None,
-
-        "co": float(latest_row["co"])
-            if "co" in df.columns else None,
-         }
-
-    return (
-        features,
-        current_aqi,
-        timestamp,
-        pollutants
-    )
+    return df
 
 
 # ============================================================
 # SAVE FORECAST TO S3
 # ============================================================
 
-def save_forecast_to_s3(
-    result
-):
+def save_forecast_to_s3(result):
 
     print(
         f"Saving forecast to "
@@ -306,17 +208,10 @@ def save_forecast_to_s3(
     )
 
     s3_client.put_object(
-
         Bucket=S3_BUCKET,
-
         Key=FORECAST_KEY,
-
-        Body=forecast_json.encode(
-            "utf-8"
-        ),
-
+        Body=forecast_json.encode("utf-8"),
         ContentType="application/json"
-
     )
 
     print(
@@ -325,19 +220,35 @@ def save_forecast_to_s3(
 
 
 # ============================================================
+# LAMBDA RESPONSE
+# ============================================================
+
+def response(status_code, body):
+
+    return {
+
+        "statusCode": status_code,
+
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+        },
+
+        "body": json.dumps(body)
+    }
+
+
+# ============================================================
 # LAMBDA HANDLER
 # ============================================================
 
-def lambda_handler(
-    event,
-    context
-):
+def lambda_handler(event, context):
 
     try:
 
-        # ----------------------------------------------------
-        # Log incoming event
-        # ----------------------------------------------------
+        print("=" * 60)
+        print("PEARLS AQI PREDICTION LAMBDA")
+        print("=" * 60)
 
         print(
             "Received event:"
@@ -351,24 +262,46 @@ def lambda_handler(
         )
 
         # ----------------------------------------------------
-        # Load latest production features
+        # Load feature list
         # ----------------------------------------------------
 
-        (
-            features,
-            current_aqi,
-            timestamp,
-            pollutants
-        ) = load_latest_features()
+        feature_list = load_feature_list()
+
+        # ----------------------------------------------------
+        # Load latest feature data
+        # ----------------------------------------------------
+
+        df = load_latest_features()
 
         print(
-            f"Latest feature timestamp: "
-            f"{timestamp}"
+            f"Feature dataset shape: {df.shape}"
         )
 
-        print(
-            f"Current AQI: "
-            f"{current_aqi}"
+        # ----------------------------------------------------
+        # Validate required features
+        # ----------------------------------------------------
+
+        missing = [
+            feature
+            for feature in feature_list
+            if feature not in df.columns
+        ]
+
+        if missing:
+
+            raise ValueError(
+                "Missing model features in S3 file: "
+                + ", ".join(missing)
+            )
+
+        # ----------------------------------------------------
+        # Use latest available row
+        # ----------------------------------------------------
+
+        latest_row = (
+            df
+            .sort_values("timestamp")
+            .iloc[-1]
         )
 
         # ----------------------------------------------------
@@ -377,13 +310,12 @@ def lambda_handler(
 
         X = pd.DataFrame(
             [
-                {
-                    feature:
-                    features[feature]
-
-                    for feature in FEATURE_LIST
-                }
-            ]
+                [
+                    latest_row[feature]
+                    for feature in feature_list
+                ]
+            ],
+            columns=feature_list
         )
 
         # ----------------------------------------------------
@@ -392,10 +324,7 @@ def lambda_handler(
 
         if X.isnull().any().any():
 
-            missing_values = (
-                X.isnull()
-                .sum()
-            )
+            missing_values = X.isnull().sum()
 
             missing_values = (
                 missing_values[
@@ -403,39 +332,91 @@ def lambda_handler(
                 ]
             )
 
-            return response(
-                500,
-                {
-                    "error":
-                    "Null values detected "
-                    "in latest S3 features.",
-
-                    "features":
+            raise ValueError(
+                "Null values detected in model input: "
+                + str(
                     missing_values.to_dict()
-                }
+                )
             )
 
         # ----------------------------------------------------
-        # Validate numeric model input
+        # Validate numeric input
         # ----------------------------------------------------
 
-        try:
+        X = X.astype(float)
 
-            X = X.astype(float)
+        # ----------------------------------------------------
+        # Current AQI
+        # ----------------------------------------------------
 
-        except Exception as e:
+        current_aqi = None
 
-            return response(
-                500,
-                {
-                    "error":
-                    "Non-numeric model feature "
-                    "detected.",
+        if "current_aqi" in df.columns:
 
-                    "message":
-                    str(e)
-                }
+            current_aqi = float(
+                latest_row["current_aqi"]
             )
+
+        elif "target_aqi" in df.columns:
+
+            current_aqi = float(
+                latest_row["target_aqi"]
+            )
+
+        # ----------------------------------------------------
+        # Timestamp
+        # ----------------------------------------------------
+
+        timestamp = None
+
+        if "timestamp" in df.columns:
+
+            timestamp = str(
+                latest_row["timestamp"]
+            )
+
+        # ----------------------------------------------------
+        # Pollutants
+        # ----------------------------------------------------
+
+        pollutants = {
+
+            "pm25": (
+                float(latest_row["pm2_5"])
+                if "pm2_5" in df.columns
+                else None
+            ),
+
+            "pm10": (
+                float(latest_row["pm10"])
+                if "pm10" in df.columns
+                else None
+            ),
+
+            "no2": (
+                float(latest_row["no2"])
+                if "no2" in df.columns
+                else None
+            ),
+
+            "o3": (
+                float(latest_row["o3"])
+                if "o3" in df.columns
+                else None
+            ),
+
+            "co": (
+                float(latest_row["co"])
+                if "co" in df.columns
+                else None
+            ),
+        }
+
+        # ----------------------------------------------------
+        # Load models
+        # ----------------------------------------------------
+
+        models = load_production_models()
 
         # ----------------------------------------------------
         # Generate forecasts
@@ -443,39 +424,33 @@ def lambda_handler(
 
         forecasts = {}
 
-        for horizon, model in MODELS.items():
+        for horizon, model in models.items():
 
             print(
                 f"Generating {horizon} forecast..."
             )
 
-            prediction = model.predict(
-                X
-            )
+            prediction = model.predict(X)
 
             prediction = float(
                 prediction[0]
             )
 
-            # Prevent negative AQI
             prediction = max(
-                0,
+                0.0,
                 prediction
             )
 
             forecasts[horizon] = {
 
-                "aqi":
-                round(
+                "aqi": round(
                     prediction,
                     2
                 ),
 
-                "category":
-                get_aqi_category(
+                "category": get_aqi_category(
                     prediction
                 )
-
             }
 
             print(
@@ -484,32 +459,26 @@ def lambda_handler(
             )
 
         # ----------------------------------------------------
-        # Build final forecast result
+        # Final result
         # ----------------------------------------------------
 
         result = {
 
-         "city": "Lahore",
+            "city": "Lahore",
 
-        "country": "Pakistan",
+            "country": "Pakistan",
 
-        "current_aqi":
-            float(current_aqi)
-            if current_aqi is not None
-            else None,
+            "current_aqi": current_aqi,
 
-        "data_timestamp":
-            timestamp,
+            "data_timestamp": timestamp,
 
-        "pollutants":
-            pollutants,
+            "pollutants": pollutants,
 
-        "forecast":
-            forecasts
-}
+            "forecast": forecasts
+        }
 
         # ----------------------------------------------------
-        # SAVE FORECAST TO S3
+        # Save result
         # ----------------------------------------------------
 
         save_forecast_to_s3(
@@ -521,7 +490,7 @@ def lambda_handler(
         )
 
         # ----------------------------------------------------
-        # Return API response
+        # Return response
         # ----------------------------------------------------
 
         return response(
@@ -531,10 +500,6 @@ def lambda_handler(
 
     except Exception as e:
 
-        # ----------------------------------------------------
-        # Log error
-        # ----------------------------------------------------
-
         print(
             "ERROR:"
         )
@@ -543,19 +508,10 @@ def lambda_handler(
             str(e)
         )
 
-        # ----------------------------------------------------
-        # Return error response
-        # ----------------------------------------------------
-
         return response(
             500,
             {
-
-                "error":
-                "Prediction failed.",
-
-                "message":
-                str(e)
-
+                "error": "Prediction failed.",
+                "message": str(e)
             }
         )

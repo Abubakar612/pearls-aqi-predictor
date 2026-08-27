@@ -1,5 +1,4 @@
-const API_URL =
-    "https://3i8a8njdia.execute-api.ap-south-1.amazonaws.com/predict";
+const API_URL = "/api/forecast";
 
 
 function categoryClass(category) {
@@ -16,15 +15,16 @@ function categoryClass(category) {
         return "moderate";
     }
 
-    if (
-        category ===
-        "Unhealthy for Sensitive Groups"
-    ) {
+    if (category === "Unhealthy for Sensitive Groups") {
         return "sensitive";
     }
 
     if (category === "Unhealthy") {
         return "unhealthy";
+    }
+
+    if (category === "Very Unhealthy") {
+        return "very";
     }
 
     return "hazardous";
@@ -33,7 +33,7 @@ function categoryClass(category) {
 
 function pollutantStatus(value, type) {
 
-    if (value === null || value === undefined) {
+    if (value === null || value === undefined || isNaN(value)) {
         return "--";
     }
 
@@ -81,41 +81,42 @@ function pollutantStatus(value, type) {
 }
 
 
-function setPollutant(
-    id,
-    value,
-    type,
-    maxValue
-) {
+function setPollutant(id, value, type, maxValue) {
 
-    const valueElement =
-        document.getElementById(id);
+    const valueElement = document.getElementById(id);
 
-    const barElement =
-        document.getElementById(
-            `${id}-bar`
-        );
+    const barElement = document.getElementById(
+        `${id}-bar`
+    );
 
-    const statusElement =
-        document.getElementById(
-            `${id}-status`
-        );
+    const statusElement = document.getElementById(
+        `${id}-status`
+    );
 
     if (
         value === null ||
-        value === undefined
+        value === undefined ||
+        isNaN(value)
     ) {
+
         valueElement.textContent = "--";
         statusElement.textContent = "--";
+
+        if (barElement) {
+            barElement.style.width = "0%";
+        }
+
         return;
     }
 
+    const numericValue = Number(value);
+
     valueElement.textContent =
-        Number(value).toFixed(2);
+        numericValue.toFixed(2);
 
     statusElement.textContent =
         pollutantStatus(
-            value,
+            numericValue,
             type
         );
 
@@ -124,12 +125,44 @@ function setPollutant(
             100,
             Math.max(
                 3,
-                (value / maxValue) * 100
+                (numericValue / maxValue) * 100
             )
         );
 
-    barElement.style.width =
-        `${percentage}%`;
+    if (barElement) {
+        barElement.style.width =
+            `${percentage}%`;
+    }
+}
+
+
+function updateCategory(elementId, category) {
+
+    const element =
+        document.getElementById(elementId);
+
+    if (!element) {
+        return;
+    }
+
+    element.textContent =
+        category || "--";
+
+    element.classList.remove(
+        "good",
+        "moderate",
+        "sensitive",
+        "unhealthy",
+        "very",
+        "hazardous"
+    );
+
+    const cssClass =
+        categoryClass(category);
+
+    if (cssClass) {
+        element.classList.add(cssClass);
+    }
 }
 
 
@@ -147,26 +180,33 @@ function updateChart(values) {
         940
     ];
 
-    const points =
-        values.map(
-            (value, index) => {
+    const points = values.map(
+        (value, index) => {
 
-                const x =
-                    xPositions[index];
+            const safeValue =
+                Math.max(
+                    0,
+                    Number(value) || 0
+                );
 
-                const y =
-                    svgHeight -
-                    (
-                        (value / maxAQI)
-                        * svgHeight
-                    );
+            const x =
+                xPositions[index];
 
-                return {
-                    x,
-                    y
-                };
-            }
-        );
+            const y =
+                svgHeight -
+                (
+                    Math.min(
+                        safeValue,
+                        maxAQI
+                    ) / maxAQI
+                ) * svgHeight;
+
+            return {
+                x,
+                y
+            };
+        }
+    );
 
     const pointString =
         points
@@ -176,39 +216,48 @@ function updateChart(values) {
             )
             .join(" ");
 
-    document
-        .getElementById("chart-line")
-        .setAttribute(
+    const chartLine =
+        document.getElementById(
+            "chart-line"
+        );
+
+    if (chartLine) {
+
+        chartLine.setAttribute(
             "points",
             pointString
         );
+    }
 
 
-    const areaPath =
-        `
-        M ${points[0].x} ${points[0].y}
-        ${points
-            .slice(1)
-            .map(
-                point =>
-                    `L ${point.x} ${point.y}`
-            )
-            .join(" ")}
-        L ${points[points.length - 1].x}
-          ${svgHeight}
-        L ${points[0].x}
-          ${svgHeight}
-        Z
-        `;
+    if (points.length > 0) {
 
-    document
-        .getElementById(
-            "chart-area-fill"
-        )
-        .setAttribute(
-            "d",
-            areaPath
-        );
+        const areaPath =
+            `M ${points[0].x} ${points[0].y}
+             ${points
+                .slice(1)
+                .map(
+                    point =>
+                        `L ${point.x} ${point.y}`
+                )
+                .join(" ")}
+             L ${points[points.length - 1].x} ${svgHeight}
+             L ${points[0].x} ${svgHeight}
+             Z`;
+
+        const area =
+            document.getElementById(
+                "chart-area-fill"
+            );
+
+        if (area) {
+
+            area.setAttribute(
+                "d",
+                areaPath
+            );
+        }
+    }
 
 
     const pointsGroup =
@@ -216,43 +265,45 @@ function updateChart(values) {
             "chart-points"
         );
 
+    if (!pointsGroup) {
+        return;
+    }
+
     pointsGroup.innerHTML = "";
 
 
-    points.forEach(
-        point => {
+    points.forEach(point => {
 
-            const circle =
-                document.createElementNS(
-                    "http://www.w3.org/2000/svg",
-                    "circle"
-                );
-
-            circle.setAttribute(
-                "cx",
-                point.x
+        const circle =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "circle"
             );
 
-            circle.setAttribute(
-                "cy",
-                point.y
-            );
+        circle.setAttribute(
+            "cx",
+            point.x
+        );
 
-            circle.setAttribute(
-                "r",
-                "7"
-            );
+        circle.setAttribute(
+            "cy",
+            point.y
+        );
 
-            circle.setAttribute(
-                "class",
-                "chart-point"
-            );
+        circle.setAttribute(
+            "r",
+            "7"
+        );
 
-            pointsGroup.appendChild(
-                circle
-            );
-        }
-    );
+        circle.setAttribute(
+            "class",
+            "chart-point"
+        );
+
+        pointsGroup.appendChild(
+            circle
+        );
+    });
 }
 
 
@@ -282,6 +333,59 @@ function formatTimestamp(timestamp) {
 }
 
 
+function setLoadingState() {
+
+    const currentAQI =
+        document.getElementById(
+            "current-aqi"
+        );
+
+    if (currentAQI) {
+        currentAQI.textContent = "--";
+    }
+
+
+    const currentCategory =
+        document.getElementById(
+            "current-category"
+        );
+
+    if (currentCategory) {
+        currentCategory.textContent =
+            "Loading";
+    }
+}
+
+
+function showError(message) {
+
+    console.error(
+        "Dashboard error:",
+        message
+    );
+
+    const category =
+        document.getElementById(
+            "current-category"
+        );
+
+    if (category) {
+        category.textContent =
+            "Unable to load data";
+    }
+
+    const timestamp =
+        document.getElementById(
+            "data-timestamp"
+        );
+
+    if (timestamp) {
+        timestamp.textContent =
+            "--";
+    }
+}
+
+
 async function loadDashboard() {
 
     const refreshButton =
@@ -289,31 +393,43 @@ async function loadDashboard() {
             "refresh-button"
         );
 
-    refreshButton.textContent =
-        "Loading...";
+    if (refreshButton) {
 
-    refreshButton.disabled = true;
+        refreshButton.textContent =
+            "Loading...";
+
+        refreshButton.disabled =
+            true;
+    }
 
 
     try {
 
+        setLoadingState();
+
+
+        /*
+         * The local FastAPI endpoint reads
+         * the latest forecast directly from S3.
+         */
         const response =
             await fetch(
                 API_URL,
                 {
-                    method: "POST",
+                    method: "GET",
 
                     headers: {
-                        "Content-Type":
+                        "Accept":
                             "application/json"
                     },
 
-                    body: "{}"
+                    cache: "no-store"
                 }
             );
 
 
         if (!response.ok) {
+
             throw new Error(
                 `API error ${response.status}`
             );
@@ -324,44 +440,106 @@ async function loadDashboard() {
             await response.json();
 
 
-        /* CURRENT AQI */
+        console.log(
+            "Forecast data:",
+            data
+        );
 
-        document
-            .getElementById(
-                "current-aqi"
-            )
-            .textContent =
-            Math.round(
+
+        /*
+         * CURRENT AQI
+         */
+
+        const currentAQI =
+            Number(
                 data.current_aqi
             );
 
-
-        const category =
-            data.forecast?.["24h"]?.category
-            || "--";
-
-
-        document
-            .getElementById(
-                "current-category"
-            )
-            .textContent =
-            category;
-
-
-        /* TIMESTAMP */
-
-        document
-            .getElementById(
-                "data-timestamp"
-            )
-            .textContent =
-            formatTimestamp(
-                data.data_timestamp
+        const currentAQIElement =
+            document.getElementById(
+                "current-aqi"
             );
 
+        if (
+            currentAQIElement &&
+            !isNaN(currentAQI)
+        ) {
 
-        /* FORECAST */
+            currentAQIElement.textContent =
+                Math.round(
+                    currentAQI
+                );
+        }
+
+
+        /*
+         * CURRENT CATEGORY
+         *
+         * Use the current AQI itself,
+         * rather than the 24h forecast category.
+         */
+
+        let currentCategory =
+            "Unknown";
+
+
+        if (currentAQI <= 50) {
+
+            currentCategory = "Good";
+
+        } else if (currentAQI <= 100) {
+
+            currentCategory = "Moderate";
+
+        } else if (currentAQI <= 150) {
+
+            currentCategory =
+                "Unhealthy for Sensitive Groups";
+
+        } else if (currentAQI <= 200) {
+
+            currentCategory =
+                "Unhealthy";
+
+        } else if (currentAQI <= 300) {
+
+            currentCategory =
+                "Very Unhealthy";
+
+        } else {
+
+            currentCategory =
+                "Hazardous";
+        }
+
+
+        updateCategory(
+            "current-category",
+            currentCategory
+        );
+
+
+        /*
+         * TIMESTAMP
+         */
+
+        const timestampElement =
+            document.getElementById(
+                "data-timestamp"
+            );
+
+        if (timestampElement) {
+
+            timestampElement.textContent =
+                formatTimestamp(
+                    data.data_timestamp
+                );
+        }
+
+
+        /*
+         * FORECASTS
+         */
 
         const horizons = [
             "24h",
@@ -370,34 +548,42 @@ async function loadDashboard() {
         ];
 
 
-        horizons.forEach(
-            horizon => {
+        horizons.forEach(horizon => {
 
-                const forecast =
-                    data.forecast[horizon];
-
-
-                document
-                    .getElementById(
-                        `forecast-${horizon}`
-                    )
-                    .textContent =
-                    Math.round(
-                        forecast.aqi
-                    );
+            const forecast =
+                data.forecast?.[horizon];
 
 
-                document
-                    .getElementById(
-                        `category-${horizon}`
-                    )
-                    .textContent =
-                    forecast.category;
+            if (!forecast) {
+                return;
             }
-        );
 
 
-        /* POLLUTANTS */
+            const forecastElement =
+                document.getElementById(
+                    `forecast-${horizon}`
+                );
+
+
+            if (forecastElement) {
+
+                forecastElement.textContent =
+                    Number(
+                        forecast.aqi
+                    ).toFixed(1);
+            }
+
+
+            updateCategory(
+                `category-${horizon}`,
+                forecast.category
+            );
+        });
+
+
+        /*
+         * POLLUTANTS
+         */
 
         if (data.pollutants) {
 
@@ -408,12 +594,14 @@ async function loadDashboard() {
                 100
             );
 
+
             setPollutant(
                 "pm10",
                 data.pollutants.pm10,
                 "pm10",
                 150
             );
+
 
             setPollutant(
                 "no2",
@@ -422,12 +610,14 @@ async function loadDashboard() {
                 100
             );
 
+
             setPollutant(
                 "o3",
                 data.pollutants.o3,
                 "o3",
                 100
             );
+
 
             setPollutant(
                 "co",
@@ -438,24 +628,24 @@ async function loadDashboard() {
         }
 
 
-        /* GRAPH */
+        /*
+         * GRAPH
+         */
 
         updateChart(
             [
+                currentAQI,
+
                 Number(
-                    data.current_aqi
+                    data.forecast?.["24h"]?.aqi
                 ),
 
                 Number(
-                    data.forecast["24h"].aqi
+                    data.forecast?.["48h"]?.aqi
                 ),
 
                 Number(
-                    data.forecast["48h"].aqi
-                ),
-
-                Number(
-                    data.forecast["72h"].aqi
+                    data.forecast?.["72h"]?.aqi
                 )
             ]
         );
@@ -463,28 +653,27 @@ async function loadDashboard() {
 
     } catch (error) {
 
-        console.error(
-            "Dashboard error:",
-            error
+        showError(
+            error.message
         );
-
-        document
-            .getElementById(
-                "current-category"
-            )
-            .textContent =
-            "Unable to load data";
 
     } finally {
 
-        refreshButton.textContent =
-            "↻ Refresh";
+        if (refreshButton) {
 
-        refreshButton.disabled =
-            false;
+            refreshButton.textContent =
+                "↻ Refresh";
+
+            refreshButton.disabled =
+                false;
+        }
     }
 }
 
+
+/*
+ * INITIAL LOAD
+ */
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -492,13 +681,19 @@ document.addEventListener(
 
         loadDashboard();
 
-        document
-            .getElementById(
+
+        const refreshButton =
+            document.getElementById(
                 "refresh-button"
-            )
-            .addEventListener(
+            );
+
+
+        if (refreshButton) {
+
+            refreshButton.addEventListener(
                 "click",
                 loadDashboard
             );
+        }
     }
 );

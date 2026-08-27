@@ -1,0 +1,2 @@
+timestamp,target_aqi,pm2_5,pm10,no2,o3,co,feels_like,aqi_rolling_mean_24h,pm10_rolling_mean_24h,aqi_rolling_mean_12h,precipitation,aqi_rolling_mean_48h,aqi_rolling_std_24h,aqi_change_3h,aqi_lag_48h,aqi_lag_24h,aqi_lag_3h,day_of_week,aqi_lag_12h,pm10_rolling_mean_3h,pm25_lag_12h,temperature,humidity,pm10_lag_3h,pm10_lag_6h,aqi_lag_1h,pm10_lag_1h
+2026-08-27 16:00:00+00:00,151.0,55.62,158.07,15.46,39.96,430.85,39.4,150.0,169.48625,142.25,0.0,151.8125,9.851064828780634,10.0,149.0,162.0,141.0,3,135.0,164.88999999999996,49.22,33.68,55,167.06,178.98,149.0,162.12

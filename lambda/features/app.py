@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 from io import BytesIO
 
@@ -498,18 +498,23 @@ def lambda_handler(event, context):
                 + ", ".join(missing)
             )
 
-        required_columns = list(
+        output_columns = list(
             dict.fromkeys(
                 [
                     "timestamp",
                     "target_aqi",
+                    "pm2_5",
+                    "pm10",
+                    "no2",
+                    "o3",
+                    "co",
                     *feature_list
                 ]
             )
         )
 
         latest = (
-            df[required_columns]
+            df[output_columns]
             .dropna(
                 subset=feature_list
             )

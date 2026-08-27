@@ -6,65 +6,108 @@
 
 <div class="dashboard">
 
-    <!-- HEADER -->
+    <!-- =========================================================
+         HEADER
+    ========================================================== -->
+
     <header class="topbar">
 
         <div class="brand">
-            <div class="brand-icon">AQ</div>
+
+            <div class="brand-icon">
+                AQ
+            </div>
 
             <div>
                 <h1>Lahore AQI Predictor</h1>
-                <p>Air quality forecasting powered by machine learning</p>
+
+                <p>
+                    Air quality forecasting powered by machine learning
+                </p>
             </div>
+
         </div>
 
+
         <div class="header-right">
+
             <div class="live">
                 <span></span>
                 Live
             </div>
 
-            <button id="refresh-button">
+            <button
+                id="refresh-button"
+                type="button"
+            >
                 ↻ Refresh
             </button>
+
         </div>
 
     </header>
 
 
+    <!-- =========================================================
+         MAIN CONTENT
+    ========================================================== -->
+
     <main>
 
-        <!-- HERO -->
+
+        <!-- =====================================================
+             HERO
+        ====================================================== -->
+
         <section class="hero">
 
             <div>
-                <span class="overline">CURRENT AIR QUALITY</span>
 
-                <h2>Lahore Air Quality</h2>
+                <span class="overline">
+                    CURRENT AIR QUALITY
+                </span>
+
+                <h2>
+                    Lahore Air Quality
+                </h2>
 
                 <p>
                     Current AQI and machine-learning predictions
                     for the next three days.
                 </p>
+
             </div>
 
+
             <div class="updated">
+
                 Last updated
-                <strong id="data-timestamp">--</strong>
+
+                <strong id="data-timestamp">
+                    --
+                </strong>
+
             </div>
 
         </section>
 
 
-        <!-- CURRENT + FORECAST -->
+
+        <!-- =====================================================
+             CURRENT AQI + FORECAST
+        ====================================================== -->
+
         <section class="main-grid">
 
+
             <!-- CURRENT AQI -->
+
             <div class="current-card">
 
                 <div class="card-label">
                     CURRENT AQI
                 </div>
+
 
                 <div
                     id="current-aqi"
@@ -73,6 +116,7 @@
                     --
                 </div>
 
+
                 <div
                     id="current-category"
                     class="status-badge"
@@ -80,26 +124,43 @@
                     Loading
                 </div>
 
+
                 <p class="location">
                     Lahore, Pakistan
                 </p>
 
+
+                <!-- AQI SCALE -->
+
                 <div class="aqi-scale">
 
                     <div class="scale-bar">
+
                         <span class="s-good"></span>
+
                         <span class="s-moderate"></span>
+
                         <span class="s-sensitive"></span>
+
                         <span class="s-unhealthy"></span>
+
                         <span class="s-very"></span>
+
                         <span class="s-hazardous"></span>
+
                     </div>
 
+
                     <div class="scale-labels">
+
                         <span>Good</span>
+
                         <span>Moderate</span>
+
                         <span>Unhealthy</span>
+
                         <span>Hazardous</span>
+
                     </div>
 
                 </div>
@@ -107,25 +168,37 @@
             </div>
 
 
+
             <!-- THREE DAY FORECAST -->
+
             <div class="forecast-area">
 
                 <div class="section-title">
+
                     <div>
+
                         <span class="overline">
                             MACHINE LEARNING FORECAST
                         </span>
 
-                        <h3>Next 3 Days</h3>
+                        <h3>
+                            Next 3 Days
+                        </h3>
+
                     </div>
+
 
                     <span class="forecast-label">
                         24–72 hours
                     </span>
+
                 </div>
 
 
                 <div class="forecast-grid">
+
+
+                    <!-- 24 HOURS -->
 
                     <div class="forecast-card">
 
@@ -133,9 +206,11 @@
                             NEXT 24 HOURS
                         </span>
 
+
                         <strong id="forecast-24h">
                             --
                         </strong>
+
 
                         <span
                             id="category-24h"
@@ -147,15 +222,20 @@
                     </div>
 
 
+
+                    <!-- 48 HOURS -->
+
                     <div class="forecast-card">
 
                         <span class="day">
                             NEXT 48 HOURS
                         </span>
 
+
                         <strong id="forecast-48h">
                             --
                         </strong>
+
 
                         <span
                             id="category-48h"
@@ -167,15 +247,20 @@
                     </div>
 
 
+
+                    <!-- 72 HOURS -->
+
                     <div class="forecast-card">
 
                         <span class="day">
                             NEXT 72 HOURS
                         </span>
 
+
                         <strong id="forecast-72h">
                             --
                         </strong>
+
 
                         <span
                             id="category-72h"
@@ -193,18 +278,27 @@
         </section>
 
 
-        <!-- POLLUTANTS -->
+
+        <!-- =====================================================
+             POLLUTANTS
+        ====================================================== -->
+
         <section class="section">
 
             <div class="section-title">
 
                 <div>
+
                     <span class="overline">
                         AIR QUALITY DATA
                     </span>
 
-                    <h3>Pollutant Breakdown</h3>
+                    <h3>
+                        Pollutant Breakdown
+                    </h3>
+
                 </div>
+
 
                 <span class="muted">
                     Latest available readings
@@ -215,11 +309,15 @@
 
             <div class="pollutants">
 
+
                 <!-- PM2.5 -->
+
                 <div class="pollutant">
 
                     <div class="pollutant-top">
+
                         <div>
+
                             <span class="pollutant-name">
                                 PM2.5
                             </span>
@@ -227,33 +325,51 @@
                             <span class="pollutant-desc">
                                 Fine particulate matter
                             </span>
+
                         </div>
+
 
                         <strong id="pm25">
                             --
                         </strong>
+
                     </div>
 
+
                     <div class="progress">
+
                         <span
                             id="pm25-bar"
                             style="width:0%"
                         ></span>
+
                     </div>
 
+
                     <div class="pollutant-bottom">
-                        <span>µg/m³</span>
-                        <span id="pm25-status">--</span>
+
+                        <span>
+                            µg/m³
+                        </span>
+
+                        <span id="pm25-status">
+                            --
+                        </span>
+
                     </div>
 
                 </div>
 
 
+
                 <!-- PM10 -->
+
                 <div class="pollutant">
 
                     <div class="pollutant-top">
+
                         <div>
+
                             <span class="pollutant-name">
                                 PM10
                             </span>
@@ -261,33 +377,51 @@
                             <span class="pollutant-desc">
                                 Coarse particulate matter
                             </span>
+
                         </div>
+
 
                         <strong id="pm10">
                             --
                         </strong>
+
                     </div>
 
+
                     <div class="progress">
+
                         <span
                             id="pm10-bar"
                             style="width:0%"
                         ></span>
+
                     </div>
 
+
                     <div class="pollutant-bottom">
-                        <span>µg/m³</span>
-                        <span id="pm10-status">--</span>
+
+                        <span>
+                            µg/m³
+                        </span>
+
+                        <span id="pm10-status">
+                            --
+                        </span>
+
                     </div>
 
                 </div>
 
 
+
                 <!-- NO2 -->
+
                 <div class="pollutant">
 
                     <div class="pollutant-top">
+
                         <div>
+
                             <span class="pollutant-name">
                                 NO₂
                             </span>
@@ -295,33 +429,51 @@
                             <span class="pollutant-desc">
                                 Nitrogen dioxide
                             </span>
+
                         </div>
+
 
                         <strong id="no2">
                             --
                         </strong>
+
                     </div>
 
+
                     <div class="progress">
+
                         <span
                             id="no2-bar"
                             style="width:0%"
                         ></span>
+
                     </div>
 
+
                     <div class="pollutant-bottom">
-                        <span>µg/m³</span>
-                        <span id="no2-status">--</span>
+
+                        <span>
+                            µg/m³
+                        </span>
+
+                        <span id="no2-status">
+                            --
+                        </span>
+
                     </div>
 
                 </div>
 
 
+
                 <!-- O3 -->
+
                 <div class="pollutant">
 
                     <div class="pollutant-top">
+
                         <div>
+
                             <span class="pollutant-name">
                                 O₃
                             </span>
@@ -329,33 +481,51 @@
                             <span class="pollutant-desc">
                                 Ozone
                             </span>
+
                         </div>
+
 
                         <strong id="o3">
                             --
                         </strong>
+
                     </div>
 
+
                     <div class="progress">
+
                         <span
                             id="o3-bar"
                             style="width:0%"
                         ></span>
+
                     </div>
 
+
                     <div class="pollutant-bottom">
-                        <span>µg/m³</span>
-                        <span id="o3-status">--</span>
+
+                        <span>
+                            µg/m³
+                        </span>
+
+                        <span id="o3-status">
+                            --
+                        </span>
+
                     </div>
 
                 </div>
 
 
+
                 <!-- CO -->
+
                 <div class="pollutant">
 
                     <div class="pollutant-top">
+
                         <div>
+
                             <span class="pollutant-name">
                                 CO
                             </span>
@@ -363,23 +533,37 @@
                             <span class="pollutant-desc">
                                 Carbon monoxide
                             </span>
+
                         </div>
+
 
                         <strong id="co">
                             --
                         </strong>
+
                     </div>
 
+
                     <div class="progress">
+
                         <span
                             id="co-bar"
                             style="width:0%"
                         ></span>
+
                     </div>
 
+
                     <div class="pollutant-bottom">
-                        <span>µg/m³</span>
-                        <span id="co-status">--</span>
+
+                        <span>
+                            µg/m³
+                        </span>
+
+                        <span id="co-status">
+                            --
+                        </span>
+
                     </div>
 
                 </div>
@@ -389,18 +573,27 @@
         </section>
 
 
-        <!-- GRAPH -->
+
+        <!-- =====================================================
+             FORECAST GRAPH
+        ====================================================== -->
+
         <section class="section">
 
             <div class="section-title">
 
                 <div>
+
                     <span class="overline">
                         FORECAST TREND
                     </span>
 
-                    <h3>AQI Prediction</h3>
+                    <h3>
+                        AQI Prediction
+                    </h3>
+
                 </div>
+
 
                 <span class="muted">
                     Current → 72 hours
@@ -411,23 +604,46 @@
 
             <div class="chart-card">
 
+
+                <!-- Y AXIS -->
+
                 <div class="chart-values">
 
+                    <span>300</span>
+
+                    <span>250</span>
+
                     <span>200</span>
+
                     <span>150</span>
+
                     <span>100</span>
+
                     <span>50</span>
+
                     <span>0</span>
 
                 </div>
 
+
+                <!-- CHART -->
+
                 <div class="chart-area">
 
+                    <div class="grid-line line-300"></div>
+
+                    <div class="grid-line line-250"></div>
+
                     <div class="grid-line line-200"></div>
+
                     <div class="grid-line line-150"></div>
+
                     <div class="grid-line line-100"></div>
+
                     <div class="grid-line line-50"></div>
+
                     <div class="grid-line line-0"></div>
+
 
                     <svg
                         id="aqi-chart"
@@ -461,17 +677,20 @@
 
                         </defs>
 
+
                         <path
                             id="chart-area-fill"
                             class="chart-area-fill"
                             d=""
                         ></path>
 
+
                         <polyline
                             id="chart-line"
                             class="chart-line"
                             points=""
                         ></polyline>
+
 
                         <g id="chart-points"></g>
 
@@ -482,49 +701,97 @@
             </div>
 
 
+            <!-- X AXIS -->
+
             <div class="chart-labels">
-                <span>Current</span>
-                <span>24h</span>
-                <span>48h</span>
-                <span>72h</span>
+
+                <span>
+                    Current
+                </span>
+
+                <span>
+                    24h
+                </span>
+
+                <span>
+                    48h
+                </span>
+
+                <span>
+                    72h
+                </span>
+
             </div>
 
         </section>
 
 
-        <!-- SIMPLE MODEL INFO -->
+
+        <!-- =====================================================
+             MODEL INFORMATION
+        ====================================================== -->
+
         <section class="model-card">
 
             <div>
+
                 <span class="overline">
                     PREDICTION ENGINE
                 </span>
+
 
                 <h3>
                     Abubakar AQI Prediction Engine
                 </h3>
 
+
                 <p>
                     Machine-learning models trained to forecast
                     Lahore's AQI for the next 24, 48 and 72 hours.
                 </p>
+
             </div>
+
 
             <div class="model-stats">
 
-                <div>
-                    <span>Forecasts</span>
-                    <strong>3</strong>
-                </div>
 
                 <div>
-                    <span>Update</span>
-                    <strong>Hourly</strong>
+
+                    <span>
+                        Forecasts
+                    </span>
+
+                    <strong>
+                        3
+                    </strong>
+
                 </div>
 
+
                 <div>
-                    <span>Location</span>
-                    <strong>Lahore</strong>
+
+                    <span>
+                        Update
+                    </span>
+
+                    <strong>
+                        Hourly
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Location
+                    </span>
+
+                    <strong>
+                        Lahore
+                    </strong>
+
                 </div>
 
             </div>
@@ -532,12 +799,799 @@
         </section>
 
 
+
+        <!-- =====================================================
+             FOOTER
+        ====================================================== -->
+
         <footer>
-            Lahore AQI Predictor · Abubakar AQI Prediction Engine
+
+            Lahore AQI Predictor ·
+            Abubakar AQI Prediction Engine
+
         </footer>
 
     </main>
 
 </div>
+
+
+
+<!-- =============================================================
+     DASHBOARD JAVASCRIPT
+============================================================== -->
+
+<script>
+
+"use strict";
+
+
+/* =============================================================
+   LOAD FORECAST
+============================================================= */
+
+async function loadForecast() {
+
+    const refreshButton =
+        document.getElementById("refresh-button");
+
+    try {
+
+        refreshButton.disabled = true;
+
+        refreshButton.textContent = "Refreshing...";
+
+
+        const response =
+            await fetch(
+                "/api/forecast",
+                {
+                    method: "GET",
+                    cache: "no-cache"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        updateDashboard(data);
+
+
+    } catch (error) {
+
+        console.error(
+            "Forecast loading error:",
+            error
+        );
+
+
+        document.getElementById(
+            "current-category"
+        ).textContent = "Unavailable";
+
+
+        document.getElementById(
+            "data-timestamp"
+        ).textContent = "Unable to load";
+
+
+    } finally {
+
+        refreshButton.disabled = false;
+
+        refreshButton.textContent = "↻ Refresh";
+
+    }
+
+}
+
+
+
+/* =============================================================
+   UPDATE ENTIRE DASHBOARD
+============================================================= */
+
+function updateDashboard(data) {
+
+
+    /* ---------------------------------------------------------
+       CURRENT AQI
+    --------------------------------------------------------- */
+
+    const currentAQI =
+        Number(data.current_aqi);
+
+
+    const currentAQIElement =
+        document.getElementById("current-aqi");
+
+
+    if (Number.isFinite(currentAQI)) {
+
+        currentAQIElement.textContent =
+            Math.round(currentAQI);
+
+    } else {
+
+        currentAQIElement.textContent =
+            "--";
+
+    }
+
+
+    document.getElementById(
+        "current-category"
+    ).textContent =
+        getAQICategory(currentAQI);
+
+
+
+    /* ---------------------------------------------------------
+       TIMESTAMP
+    --------------------------------------------------------- */
+
+    document.getElementById(
+        "data-timestamp"
+    ).textContent =
+        formatTimestamp(
+            data.data_timestamp
+        );
+
+
+
+    /* ---------------------------------------------------------
+       FORECAST
+    --------------------------------------------------------- */
+
+    const forecast =
+        data.forecast || {};
+
+
+    updateForecastCard(
+        "24h",
+        forecast["24h"]
+    );
+
+
+    updateForecastCard(
+        "48h",
+        forecast["48h"]
+    );
+
+
+    updateForecastCard(
+        "72h",
+        forecast["72h"]
+    );
+
+
+
+    /* ---------------------------------------------------------
+       POLLUTANTS
+    --------------------------------------------------------- */
+
+    const pollutants =
+        data.pollutants || {};
+
+
+    updatePollutant(
+        "pm25",
+        "pm25-bar",
+        "pm25-status",
+        pollutants.pm25
+    );
+
+
+    updatePollutant(
+        "pm10",
+        "pm10-bar",
+        "pm10-status",
+        pollutants.pm10
+    );
+
+
+    updatePollutant(
+        "no2",
+        "no2-bar",
+        "no2-status",
+        pollutants.no2
+    );
+
+
+    updatePollutant(
+        "o3",
+        "o3-bar",
+        "o3-status",
+        pollutants.o3
+    );
+
+
+    updatePollutant(
+        "co",
+        "co-bar",
+        "co-status",
+        pollutants.co
+    );
+
+
+
+    /* ---------------------------------------------------------
+       CHART
+    --------------------------------------------------------- */
+
+    updateChart(
+
+        currentAQI,
+
+        forecast["24h"]
+            ? forecast["24h"].aqi
+            : null,
+
+        forecast["48h"]
+            ? forecast["48h"].aqi
+            : null,
+
+        forecast["72h"]
+            ? forecast["72h"].aqi
+            : null
+
+    );
+
+}
+
+
+
+/* =============================================================
+   FORECAST CARD
+============================================================= */
+
+function updateForecastCard(
+    horizon,
+    forecast
+) {
+
+    const valueElement =
+        document.getElementById(
+            `forecast-${horizon}`
+        );
+
+
+    const categoryElement =
+        document.getElementById(
+            `category-${horizon}`
+        );
+
+
+    if (
+        !forecast ||
+        forecast.aqi === null ||
+        forecast.aqi === undefined
+    ) {
+
+        valueElement.textContent =
+            "--";
+
+        categoryElement.textContent =
+            "--";
+
+        return;
+
+    }
+
+
+    const aqi =
+        Number(forecast.aqi);
+
+
+    valueElement.textContent =
+        Number.isFinite(aqi)
+            ? Math.round(aqi)
+            : "--";
+
+
+    categoryElement.textContent =
+        forecast.category ||
+        getAQICategory(aqi);
+
+}
+
+
+
+/* =============================================================
+   POLLUTANT CARD
+============================================================= */
+
+function updatePollutant(
+    valueId,
+    barId,
+    statusId,
+    value
+) {
+
+    const valueElement =
+        document.getElementById(valueId);
+
+
+    const barElement =
+        document.getElementById(barId);
+
+
+    const statusElement =
+        document.getElementById(statusId);
+
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        valueElement.textContent =
+            "--";
+
+        barElement.style.width =
+            "0%";
+
+        statusElement.textContent =
+            "--";
+
+        return;
+
+    }
+
+
+    const number =
+        Number(value);
+
+
+    if (!Number.isFinite(number)) {
+
+        valueElement.textContent =
+            "--";
+
+        barElement.style.width =
+            "0%";
+
+        statusElement.textContent =
+            "--";
+
+        return;
+
+    }
+
+
+    valueElement.textContent =
+        number.toFixed(2);
+
+
+    /*
+     * Visual scale.
+     *
+     * 200 µg/m³ is treated as
+     * 100% of the progress bar.
+     */
+
+    const percentage =
+        Math.min(
+            Math.max(
+                (number / 200) * 100,
+                0
+            ),
+            100
+        );
+
+
+    barElement.style.width =
+        `${percentage}%`;
+
+
+    statusElement.textContent =
+        getPollutantStatus(number);
+
+}
+
+
+
+/* =============================================================
+   POLLUTANT STATUS
+============================================================= */
+
+function getPollutantStatus(value) {
+
+    if (value <= 50) {
+
+        return "Low";
+
+    }
+
+
+    if (value <= 100) {
+
+        return "Moderate";
+
+    }
+
+
+    if (value <= 150) {
+
+        return "High";
+
+    }
+
+
+    return "Very High";
+
+}
+
+
+
+/* =============================================================
+   AQI CATEGORY
+============================================================= */
+
+function getAQICategory(aqi) {
+
+    if (!Number.isFinite(aqi)) {
+
+        return "Unavailable";
+
+    }
+
+
+    if (aqi <= 50) {
+
+        return "Good";
+
+    }
+
+
+    if (aqi <= 100) {
+
+        return "Moderate";
+
+    }
+
+
+    if (aqi <= 150) {
+
+        return "Unhealthy for Sensitive Groups";
+
+    }
+
+
+    if (aqi <= 200) {
+
+        return "Unhealthy";
+
+    }
+
+
+    if (aqi <= 300) {
+
+        return "Very Unhealthy";
+
+    }
+
+
+    return "Hazardous";
+
+}
+
+
+
+/* =============================================================
+   TIMESTAMP FORMAT
+============================================================= */
+
+function formatTimestamp(timestamp) {
+
+    if (!timestamp) {
+
+        return "--";
+
+    }
+
+
+    const date =
+        new Date(timestamp);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return timestamp;
+
+    }
+
+
+    return date.toLocaleString(
+        "en-GB",
+        {
+            dateStyle: "medium",
+            timeStyle: "short"
+        }
+    );
+
+}
+
+
+
+/* =============================================================
+   AQI CHART
+============================================================= */
+
+function updateChart(
+    current,
+    forecast24,
+    forecast48,
+    forecast72
+) {
+
+    const values = [
+
+        current,
+
+        forecast24,
+
+        forecast48,
+
+        forecast72
+
+    ].map(Number);
+
+
+    /*
+     * Do not draw the chart if
+     * any value is invalid.
+     */
+
+    if (
+        values.some(
+            value =>
+                !Number.isFinite(value)
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const chartHeight = 300;
+
+    const chartWidth = 1000;
+
+    const maximumAQI = 300;
+
+
+    /*
+     * Four points:
+     *
+     * Current
+     * 24h
+     * 48h
+     * 72h
+     */
+
+    const points =
+        values.map(
+            (value, index) => {
+
+
+                const x =
+                    index *
+                    (
+                        chartWidth / 3
+                    );
+
+
+                const safeValue =
+                    Math.min(
+                        Math.max(
+                            value,
+                            0
+                        ),
+                        maximumAQI
+                    );
+
+
+                const y =
+                    chartHeight -
+                    (
+                        safeValue /
+                        maximumAQI
+                    ) *
+                    chartHeight;
+
+
+                return {
+                    x,
+                    y
+                };
+
+            }
+        );
+
+
+
+    /* ---------------------------------------------------------
+       LINE
+    --------------------------------------------------------- */
+
+    const polyline =
+        document.getElementById(
+            "chart-line"
+        );
+
+
+    polyline.setAttribute(
+        "points",
+        points
+            .map(
+                point =>
+                    `${point.x},${point.y}`
+            )
+            .join(" ")
+    );
+
+
+
+    /* ---------------------------------------------------------
+       AREA FILL
+    --------------------------------------------------------- */
+
+    const fill =
+        document.getElementById(
+            "chart-area-fill"
+        );
+
+
+    const first =
+        points[0];
+
+
+    const last =
+        points[points.length - 1];
+
+
+    const linePath =
+        points
+            .map(
+                point =>
+                    `L ${point.x} ${point.y}`
+            )
+            .join(" ");
+
+
+    fill.setAttribute(
+        "d",
+        `
+        M ${first.x} ${first.y}
+        ${linePath}
+        L ${last.x} ${chartHeight}
+        L ${first.x} ${chartHeight}
+        Z
+        `
+    );
+
+
+
+    /* ---------------------------------------------------------
+       POINTS
+    --------------------------------------------------------- */
+
+    const pointsGroup =
+        document.getElementById(
+            "chart-points"
+        );
+
+
+    pointsGroup.innerHTML = "";
+
+
+    points.forEach(
+        (point, index) => {
+
+
+            const circle =
+                document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "circle"
+                );
+
+
+            circle.setAttribute(
+                "cx",
+                point.x
+            );
+
+
+            circle.setAttribute(
+                "cy",
+                point.y
+            );
+
+
+            circle.setAttribute(
+                "r",
+                "6"
+            );
+
+
+            circle.setAttribute(
+                "class",
+                "chart-point"
+            );
+
+
+            circle.setAttribute(
+                "data-value",
+                values[index].toFixed(2)
+            );
+
+
+            pointsGroup.appendChild(
+                circle
+            );
+
+        }
+    );
+
+}
+
+
+
+/* =============================================================
+   INITIAL LOAD
+============================================================= */
+
+loadForecast();
+
+
+
+/* =============================================================
+   MANUAL REFRESH
+============================================================= */
+
+document
+    .getElementById("refresh-button")
+    .addEventListener(
+        "click",
+        loadForecast
+    );
+
+
+
+/* =============================================================
+   AUTOMATIC REFRESH
+============================================================= */
+
+/*
+ * Refresh the dashboard every 5 minutes.
+ *
+ * AWS pipeline itself runs hourly.
+ * This simply makes the frontend check
+ * for new data periodically.
+ */
+
+setInterval(
+    loadForecast,
+    5 * 60 * 1000
+);
+
+</script>
 
 {% endblock %}

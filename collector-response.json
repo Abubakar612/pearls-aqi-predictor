@@ -1,0 +1,1 @@
+{"statusCode": 200, "body": "{\"status\": \"success\", \"city\": \"Lahore\", \"country\": \"Pakistan\", \"timestamp\": \"2026-08-27 16:00:00+00:00\", \"rows\": 2375, \"bucket\": \"pearls-aqi-predictor-071493957773\", \"key\": \"realtime/lahore_hourly.csv\"}"}

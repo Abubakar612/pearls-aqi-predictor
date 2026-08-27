@@ -1,6 +1,10 @@
 name: Training Pipeline
 
 on:
+  schedule:
+    # Every day at 02:00 UTC = 07:00 PKT
+    - cron: '0 2 * * *'
+
   push:
     branches: [main]
     paths:
@@ -38,6 +42,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install boto3
 
       - name: Run complete test suite
         run: |
@@ -46,3 +51,41 @@ jobs:
       - name: Run training pipeline
         run: |
           python -m src.pipelines.training_pipeline
+
+      - name: Verify production models
+        run: |
+          test -f models/production/aqi_model_24h.joblib
+          test -f models/production/aqi_model_48h.joblib
+          test -f models/production/aqi_model_72h.joblib
+          test -f models/production/feature_list.json
+          test -f models/production/validation_prediction.json
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Upload validated production models to S3
+        run: |
+          aws s3 cp models/production/aqi_model_24h.joblib \
+            s3://pearls-aqi-predictor-071493957773/models/production/aqi_model_24h.joblib
+
+          aws s3 cp models/production/aqi_model_48h.joblib \
+            s3://pearls-aqi-predictor-071493957773/models/production/aqi_model_48h.joblib
+
+          aws s3 cp models/production/aqi_model_72h.joblib \
+            s3://pearls-aqi-predictor-071493957773/models/production/aqi_model_72h.joblib
+
+          aws s3 cp models/production/feature_list.json \
+            s3://pearls-aqi-predictor-071493957773/models/production/feature_list.json
+
+      - name: Upload validation result
+        run: |
+          aws s3 cp models/production/validation_prediction.json \
+            s3://pearls-aqi-predictor-071493957773/models/production/validation_prediction.json
+
+      - name: Verify S3 deployment
+        run: |
+          aws s3 ls s3://pearls-aqi-predictor-071493957773/models/production/
