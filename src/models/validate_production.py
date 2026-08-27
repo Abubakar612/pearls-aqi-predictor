@@ -5,10 +5,6 @@ import numpy as np
 from pathlib import Path
 
 
-# ============================================================
-# PATHS
-# ============================================================
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 
 DATA_FILE = (
@@ -29,21 +25,12 @@ FEATURE_FILE = (
     / "feature_list.json"
 )
 
-
-# ============================================================
-# CONFIGURATION
-# ============================================================
-
 MODELS = {
     "24h": "aqi_model_24h.joblib",
     "48h": "aqi_model_48h.joblib",
     "72h": "aqi_model_72h.joblib",
 }
 
-
-# ============================================================
-# MAIN
-# ============================================================
 
 def main():
 
@@ -52,9 +39,10 @@ def main():
     print("PRODUCTION MODEL VALIDATION")
     print("=" * 60)
 
-    # --------------------------------------------------------
-    # Load feature list
-    # --------------------------------------------------------
+    if not FEATURE_FILE.exists():
+        raise FileNotFoundError(
+            f"Feature list not found: {FEATURE_FILE}"
+        )
 
     print("\nLoading feature list...")
 
@@ -63,16 +51,21 @@ def main():
         "r",
         encoding="utf-8"
     ) as f:
-
         features = json.load(f)
+
+    if not isinstance(features, list) or not features:
+        raise ValueError(
+            "Production feature list is empty or invalid."
+        )
 
     print(
         f"Features loaded: {len(features)}"
     )
 
-    # --------------------------------------------------------
-    # Load dataset
-    # --------------------------------------------------------
+    if not DATA_FILE.exists():
+        raise FileNotFoundError(
+            f"Dataset not found: {DATA_FILE}"
+        )
 
     print("\nLoading dataset...")
 
@@ -81,17 +74,18 @@ def main():
         parse_dates=["timestamp"]
     )
 
-    df = df.sort_values(
-        "timestamp"
-    ).reset_index(drop=True)
+    df = (
+        df
+        .sort_values("timestamp")
+        .reset_index(drop=True)
+    )
+
+    if df.empty:
+        raise ValueError("Dataset is empty.")
 
     print(
         f"Dataset rows: {len(df)}"
     )
-
-    # --------------------------------------------------------
-    # Verify features
-    # --------------------------------------------------------
 
     missing_features = [
         feature
@@ -100,27 +94,28 @@ def main():
     ]
 
     if missing_features:
-
-        print(
-            "\nERROR: Missing features:"
+        raise ValueError(
+            "Missing production features: "
+            + ", ".join(missing_features)
         )
-
-        for feature in missing_features:
-            print(
-                f"  - {feature}"
-            )
-
-        return
 
     print(
         "All required features found."
     )
 
-    # --------------------------------------------------------
-    # Use latest available observation
-    # --------------------------------------------------------
+    # Use the latest complete observation.
+    latest_rows = (
+        df
+        .dropna(subset=features)
+        .sort_values("timestamp")
+    )
 
-    latest = df.iloc[-1]
+    if latest_rows.empty:
+        raise ValueError(
+            "No complete observation is available."
+        )
+
+    latest = latest_rows.iloc[-1]
 
     X = pd.DataFrame(
         [latest[features].values],
@@ -135,32 +130,25 @@ def main():
         latest["timestamp"]
     )
 
-    # --------------------------------------------------------
-    # Check input
-    # --------------------------------------------------------
-
     if X.isnull().any().any():
-
-        print(
-            "\nERROR: Prediction input "
-            "contains missing values."
+        missing_values = (
+            X.isnull().sum()
         )
 
-        print(
-            X.isnull().sum()[
-                X.isnull().sum() > 0
+        missing_values = (
+            missing_values[
+                missing_values > 0
             ]
         )
 
-        return
+        raise ValueError(
+            f"Prediction input contains missing values:\n"
+            f"{missing_values}"
+        )
 
     print(
         "\nInput validation: PASSED"
     )
-
-    # --------------------------------------------------------
-    # Load and test models
-    # --------------------------------------------------------
 
     predictions = {}
 
@@ -174,19 +162,12 @@ def main():
             f"Testing {horizon} model"
         )
 
-        model_path = (
-            MODEL_DIR
-            / filename
-        )
+        model_path = MODEL_DIR / filename
 
         if not model_path.exists():
-
-            print(
-                f"ERROR: Model not found:"
-                f"\n{model_path}"
+            raise FileNotFoundError(
+                f"Model not found: {model_path}"
             )
-
-            continue
 
         model = joblib.load(
             model_path
@@ -194,29 +175,39 @@ def main():
 
         prediction = model.predict(X)
 
+        if len(prediction) != 1:
+            raise ValueError(
+                f"{horizon} model returned an invalid prediction."
+            )
+
         prediction = float(
             prediction[0]
         )
 
-        # AQI should not be negative
         prediction = max(
             0,
             prediction
         )
 
+        if not np.isfinite(prediction):
+            raise ValueError(
+                f"{horizon} model produced an invalid prediction."
+            )
+
         predictions[horizon] = prediction
 
         print(
-            f"Model loaded: OK"
+            "Model loaded: OK"
         )
 
         print(
             f"Prediction: {prediction:.2f}"
         )
 
-    # --------------------------------------------------------
-    # Display forecast
-    # --------------------------------------------------------
+    if len(predictions) != 3:
+        raise ValueError(
+            "Not all production models were validated."
+        )
 
     print(
         "\n" + "=" * 60
@@ -230,38 +221,15 @@ def main():
         "=" * 60
     )
 
-    for horizon, prediction in predictions.items():
-
+    for horizon in ["24h", "48h", "72h"]:
         print(
             f"{horizon:>3} forecast: "
-            f"{prediction:.2f}"
+            f"{predictions[horizon]:.2f}"
         )
 
-    # --------------------------------------------------------
-    # Sanity check
-    # --------------------------------------------------------
-
-    invalid = [
-        value
-        for value in predictions.values()
-        if not np.isfinite(value)
-    ]
-
-    if invalid:
-
-        print(
-            "\nWARNING: Invalid prediction detected."
-        )
-
-    else:
-
-        print(
-            "\nPrediction sanity check: PASSED"
-        )
-
-    # --------------------------------------------------------
-    # Save test prediction
-    # --------------------------------------------------------
+    print(
+        "\nPrediction sanity check: PASSED"
+    )
 
     output = {
         "input_timestamp": str(
@@ -288,8 +256,8 @@ def main():
         )
 
     print(
-        f"\nValidation result saved to:"
-        f"\n{output_file}"
+        f"\nValidation result saved to:\n"
+        f"{output_file}"
     )
 
     print(

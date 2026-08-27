@@ -1,24 +1,42 @@
 """
-Production training pipeline.
+Production AQI model training pipeline.
 
-This module orchestrates the existing production model
-training implementation in src.models.train_production.
+Runs the complete model-development sequence:
+1. Baseline evaluation
+2. Feature importance analysis
+3. Production model training
+4. Production model validation
 """
 
-from src.models.train_production import main as train_production_models
+from src.models.baseline import main as run_baseline
+from src.models.feature_analysis import main as run_feature_analysis
+from src.models.train_production import main as run_production_training
+from src.models.validate_production import main as run_production_validation
 
 
 def run_training_pipeline():
-    """Run the complete production training process."""
+    """Run the complete production training workflow."""
 
     print("=" * 60)
     print("PEARLS AQI PREDICTOR")
-    print("TRAINING PIPELINE")
+    print("COMPLETE TRAINING PIPELINE")
     print("=" * 60)
 
-    train_production_models()
+    print("\n[1/4] Running baseline evaluation...")
+    run_baseline()
 
-    print("\nTraining pipeline completed successfully.")
+    print("\n[2/4] Running feature importance analysis...")
+    run_feature_analysis()
+
+    print("\n[3/4] Training production models...")
+    run_production_training()
+
+    print("\n[4/4] Validating production models...")
+    run_production_validation()
+
+    print("\n" + "=" * 60)
+    print("TRAINING PIPELINE COMPLETED SUCCESSFULLY")
+    print("=" * 60)
 
 
 if __name__ == "__main__":

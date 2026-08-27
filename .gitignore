@@ -37,3 +37,5 @@ logs/
 *.tmp
 *.temp
 
+# Realtime generated data
+data/realtime/*

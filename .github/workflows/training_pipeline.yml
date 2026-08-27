@@ -7,18 +7,24 @@ on:
       - 'src/models/**'
       - 'src/features/**'
       - 'src/pipelines/**'
-      - 'tests/test_model.py'
+      - 'tests/**'
       - 'requirements.txt'
       - 'config/**'
+      - 'data/processed/**'
       - '.github/workflows/training_pipeline.yml'
+
   pull_request:
     branches: [main]
 
+  workflow_dispatch:
+
 jobs:
   training-validation:
+
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -33,10 +39,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run model tests
-        run: |
-          pytest tests/test_model.py -v
-
       - name: Run complete test suite
         run: |
           pytest tests/ -v
+
+      - name: Run training pipeline
+        run: |
+          python -m src.pipelines.training_pipeline
