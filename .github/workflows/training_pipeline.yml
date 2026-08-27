@@ -1,0 +1,42 @@
+name: Training Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/models/**'
+      - 'src/features/**'
+      - 'src/pipelines/**'
+      - 'tests/test_model.py'
+      - 'requirements.txt'
+      - 'config/**'
+      - '.github/workflows/training_pipeline.yml'
+  pull_request:
+    branches: [main]
+
+jobs:
+  training-validation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run model tests
+        run: |
+          pytest tests/test_model.py -v
+
+      - name: Run complete test suite
+        run: |
+          pytest tests/ -v
