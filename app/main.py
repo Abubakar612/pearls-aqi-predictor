@@ -1,6 +1,10 @@
-from fastapi import FastAPI, Request
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+
+from app.routes.dashboard import router as dashboard_router
+from app.routes.api import router as api_router
+from app.routes.forecast import router as forecast_router
+
 
 app = FastAPI(
     title="Pearls AQI Predictor",
@@ -8,7 +12,6 @@ app = FastAPI(
     version="0.1.0",
 )
 
-templates = Jinja2Templates(directory="app/templates")
 
 app.mount(
     "/static",
@@ -17,19 +20,6 @@ app.mount(
 )
 
 
-@app.get("/")
-async def dashboard(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="dashboard.html",
-        context={},
-    )
-
-
-@app.get("/api/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "application": "Pearls AQI Predictor",
-        "version": "0.1.0",
-    }
+app.include_router(dashboard_router)
+app.include_router(api_router)
+app.include_router(forecast_router)
