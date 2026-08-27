@@ -4,6 +4,8 @@ An end-to-end machine-learning system for real-time Air Quality Index (AQI) moni
 
 The system combines realtime environmental data, feature engineering, machine-learning models, explainable AI, AWS cloud services, automated pipelines and a web dashboard to provide an operational AQI prediction platform.
 
+Deployed Link: https://d1nseq6zvitayc.cloudfront.net/
+
 ---
 
 ## Overview
