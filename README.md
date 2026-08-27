@@ -1,10 +1,3 @@
-Yes — **the GitHub link is there because a README can include a repository section, but you don't need it**. Since the README is already inside that GitHub repository, adding the same repository link is unnecessary.
-
-Also, you asked to **paste the complete README exactly as one README**, so remove the `## Repository` section entirely.
-
-Use the version below. It starts with `# PEARLS AQI Predictor` and ends with the author, with **no GitHub repository link** and no architecture diagram.
-
-````markdown
 # PEARLS AQI Predictor
 
 An end-to-end machine-learning system for real-time Air Quality Index (AQI) monitoring and 24-hour, 48-hour and 72-hour AQI forecasting for Lahore, Pakistan.
@@ -704,7 +697,3 @@ PEARLS AQI Predictor
 
 Machine-Learning-Based Air Quality Monitoring and Forecasting System
 
-```
-
-**One small note:** the `git clone` command contains the GitHub URL because that is genuinely useful for someone installing the project. The separate **Repository** section/link has been removed.
-```
