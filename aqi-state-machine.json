@@ -1,0 +1,102 @@
+{
+  "Comment": "PEARLS AQI hourly prediction pipeline",
+  "StartAt": "CollectData",
+  "States": {
+    "CollectData": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:ap-south-1:071493957773:function:pearls-aqi-collector",
+        "Payload": {}
+      },
+      "Next": "CheckCollection",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "PipelineFailed"
+        }
+      ]
+    },
+
+    "CheckCollection": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.statusCode",
+          "NumericEquals": 200,
+          "Next": "GenerateFeatures"
+        }
+      ],
+      "Default": "PipelineFailed"
+    },
+
+    "GenerateFeatures": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:ap-south-1:071493957773:function:pearls-aqi-features",
+        "Payload": {}
+      },
+      "Next": "CheckFeatures",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "PipelineFailed"
+        }
+      ]
+    },
+
+    "CheckFeatures": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.statusCode",
+          "NumericEquals": 200,
+          "Next": "GeneratePrediction"
+        }
+      ],
+      "Default": "PipelineFailed"
+    },
+
+    "GeneratePrediction": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:ap-south-1:071493957773:function:pearls-aqi-predictor",
+        "Payload": {}
+      },
+      "Next": "CheckPrediction",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "PipelineFailed"
+        }
+      ]
+    },
+
+    "CheckPrediction": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.statusCode",
+          "NumericEquals": 200,
+          "Next": "PipelineSucceeded"
+        }
+      ],
+      "Default": "PipelineFailed"
+    },
+
+    "PipelineSucceeded": {
+      "Type": "Succeed"
+    },
+
+    "PipelineFailed": {
+      "Type": "Fail",
+      "Error": "AQIPipelineFailed",
+      "Cause": "One or more AQI pipeline stages failed."
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::pearls-aqi-predictor-071493957773/realtime/lahore_hourly.csv",
+        "arn:aws:s3:::pearls-aqi-predictor-071493957773/models/production/feature_list.json"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject"
+      ],
+      "Resource": "arn:aws:s3:::pearls-aqi-predictor-071493957773/realtime/latest_features.csv"
+    }
+  ]
+}

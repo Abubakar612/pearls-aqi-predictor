@@ -1,0 +1,20 @@
+{
+  "city": "Lahore",
+  "country": "Pakistan",
+  "current_aqi": 108.0,
+  "data_timestamp": "2026-08-18 16:00:00+00:00",
+  "forecast": {
+    "24h": {
+      "aqi": 144.68,
+      "category": "Unhealthy for Sensitive Groups"
+    },
+    "48h": {
+      "aqi": 148.61,
+      "category": "Unhealthy for Sensitive Groups"
+    },
+    "72h": {
+      "aqi": 143.09,
+      "category": "Unhealthy for Sensitive Groups"
+    }
+  }
+}

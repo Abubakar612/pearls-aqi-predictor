@@ -1,0 +1,826 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #f5f8fc;
+    --white: #ffffff;
+    --text: #111827;
+    --muted: #718096;
+    --border: #e5eaf1;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+    --orange: #f97316;
+    --orange-light: #fff4eb;
+    --green: #16a34a;
+    --shadow: 0 12px 35px rgba(15, 23, 42, .06);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+
+    background: var(--bg);
+
+    color: var(--text);
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+}
+
+.dashboard {
+    min-height: 100vh;
+}
+
+
+/* HEADER */
+
+.topbar {
+    height: 78px;
+
+    padding: 0 7%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: rgba(255,255,255,.96);
+
+    border-bottom: 1px solid var(--border);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.brand-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #3b82f6
+        );
+
+    font-size: 13px;
+    font-weight: 800;
+
+    box-shadow:
+        0 7px 18px
+        rgba(37,99,235,.2);
+}
+
+.brand h1 {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 750;
+}
+
+.brand p {
+    margin: 4px 0 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    color: #166534;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.live span {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+}
+
+#refresh-button {
+    padding: 9px 15px;
+
+    border: 1px solid #dce4ee;
+
+    background: white;
+
+    border-radius: 8px;
+
+    color: #334155;
+
+    cursor: pointer;
+
+    font-size: 11px;
+}
+
+#refresh-button:hover {
+    background: #f8fafc;
+}
+
+
+/* MAIN */
+
+main {
+    width: min(1180px, 88%);
+
+    margin: auto;
+
+    padding: 45px 0 30px;
+}
+
+
+/* HERO */
+
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+
+    margin-bottom: 30px;
+}
+
+.overline {
+    display: block;
+
+    color: var(--blue);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
+}
+
+.hero h2 {
+    margin: 8px 0 6px;
+
+    font-size: 38px;
+
+    letter-spacing: -.8px;
+}
+
+.hero p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 14px;
+}
+
+.updated {
+    color: var(--muted);
+
+    font-size: 11px;
+
+    text-align: right;
+}
+
+.updated strong {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #334155;
+}
+
+
+/* CURRENT + FORECAST */
+
+.main-grid {
+    display: grid;
+
+    grid-template-columns: 340px 1fr;
+
+    gap: 24px;
+}
+
+
+/* CURRENT AQI */
+
+.current-card {
+    min-height: 335px;
+
+    padding: 30px;
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+
+    box-shadow: var(--shadow);
+
+    text-align: center;
+}
+
+.card-label {
+    color: #64748b;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+}
+
+.current-number {
+    margin-top: 20px;
+
+    font-size: 86px;
+
+    line-height: 1;
+
+    font-weight: 800;
+
+    letter-spacing: -4px;
+
+    color: var(--orange);
+}
+
+.status-badge {
+    display: inline-block;
+
+    margin-top: 15px;
+
+    padding: 8px 14px;
+
+    border-radius: 30px;
+
+    background: var(--orange-light);
+
+    color: #c2410c;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.location {
+    margin: 15px 0 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.aqi-scale {
+    margin-top: 30px;
+}
+
+.scale-bar {
+    height: 7px;
+
+    display: flex;
+
+    overflow: hidden;
+
+    border-radius: 10px;
+}
+
+.scale-bar span {
+    flex: 1;
+}
+
+.s-good {
+    background: #22c55e;
+}
+
+.s-moderate {
+    background: #a3e635;
+}
+
+.s-sensitive {
+    background: #facc15;
+}
+
+.s-unhealthy {
+    background: #fb923c;
+}
+
+.s-very {
+    background: #ef4444;
+}
+
+.s-hazardous {
+    background: #a855f7;
+}
+
+.scale-labels {
+    margin-top: 8px;
+
+    display: flex;
+    justify-content: space-between;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+
+/* FORECAST */
+
+.forecast-area {
+    padding: 4px 0;
+}
+
+.section-title {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: end;
+
+    margin-bottom: 14px;
+}
+
+.section-title h3 {
+    margin: 6px 0 0;
+
+    font-size: 20px;
+
+    letter-spacing: -.3px;
+}
+
+.forecast-label,
+.muted {
+    color: #94a3b8;
+
+    font-size: 10px;
+}
+
+.forecast-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 14px;
+}
+
+.forecast-card {
+    min-height: 270px;
+
+    padding: 24px;
+
+    position: relative;
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 16px;
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.forecast-card::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 100%;
+    height: 3px;
+
+    background: #3b82f6;
+}
+
+.day {
+    color: #64748b;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 1.2px;
+}
+
+.forecast-card strong {
+    display: block;
+
+    margin-top: 38px;
+
+    font-size: 54px;
+
+    line-height: 1;
+
+    letter-spacing: -2px;
+
+    color: #f97316;
+}
+
+.forecast-status {
+    display: block;
+
+    margin-top: 15px;
+
+    color: #c2410c;
+
+    font-size: 10px;
+    font-weight: 650;
+
+    line-height: 1.4;
+}
+
+
+/* SECTION */
+
+.section {
+    margin-top: 50px;
+}
+
+
+/* POLLUTANTS */
+
+.pollutants {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 14px;
+}
+
+.pollutant {
+    padding: 20px;
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    box-shadow: var(--shadow);
+}
+
+.pollutant-top {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: start;
+}
+
+.pollutant-name {
+    display: block;
+
+    color: #1e293b;
+
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.pollutant-desc {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+.pollutant-top strong {
+    color: #0f172a;
+
+    font-size: 20px;
+}
+
+.progress {
+    height: 5px;
+
+    margin-top: 22px;
+
+    overflow: hidden;
+
+    border-radius: 10px;
+
+    background: #edf2f7;
+}
+
+.progress span {
+    display: block;
+
+    height: 100%;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #3b82f6,
+            #f97316
+        );
+}
+
+.pollutant-bottom {
+    margin-top: 9px;
+
+    display: flex;
+    justify-content: space-between;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+
+/* CHART */
+
+.chart-card {
+    height: 340px;
+
+    padding: 20px;
+
+    display: flex;
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 16px;
+
+    box-shadow: var(--shadow);
+}
+
+.chart-values {
+    width: 35px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    padding: 5px 0 30px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+.chart-area {
+    flex: 1;
+
+    position: relative;
+}
+
+.grid-line {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+
+    height: 1px;
+
+    background: #eef2f7;
+}
+
+.line-200 {
+    top: 0;
+}
+
+.line-150 {
+    top: 25%;
+}
+
+.line-100 {
+    top: 50%;
+}
+
+.line-50 {
+    top: 75%;
+}
+
+.line-0 {
+    bottom: 0;
+}
+
+.chart-area svg {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+}
+
+.chart-line {
+    fill: none;
+
+    stroke: #2563eb;
+
+    stroke-width: 4;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.chart-area-fill {
+    fill: url(#area-gradient);
+}
+
+.chart-point {
+    fill: white;
+
+    stroke: #2563eb;
+
+    stroke-width: 4;
+}
+
+.chart-labels {
+    display: flex;
+
+    justify-content: space-around;
+
+    margin-left: 35px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+/* MODEL */
+
+.model-card {
+    margin-top: 40px;
+
+    padding: 25px 28px;
+
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    background: #0f172a;
+
+    border-radius: 16px;
+
+    color: white;
+}
+
+.model-card h3 {
+    margin: 8px 0;
+
+    font-size: 19px;
+}
+
+.model-card p {
+    max-width: 600px;
+
+    margin: 0;
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    line-height: 1.6;
+}
+
+.model-stats {
+    display: flex;
+
+    gap: 35px;
+}
+
+.model-stats div {
+    min-width: 70px;
+}
+
+.model-stats span {
+    display: block;
+
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+.model-stats strong {
+    display: block;
+
+    margin-top: 6px;
+
+    color: #e2e8f0;
+
+    font-size: 12px;
+}
+
+footer {
+    padding: 25px 0;
+
+    text-align: center;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+/* RESPONSIVE */
+
+@media(max-width:1000px) {
+
+    .topbar {
+        padding: 0 4%;
+    }
+
+    main {
+        width: 92%;
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pollutants {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+}
+
+@media(max-width:700px) {
+
+    .topbar {
+        height: auto;
+
+        padding: 15px;
+
+        gap: 15px;
+    }
+
+    .brand p {
+        display: none;
+    }
+
+    .header-right .live {
+        display: none;
+    }
+
+    main {
+        width: 92%;
+
+        padding-top: 30px;
+    }
+
+    .hero {
+        display: block;
+    }
+
+    .hero h2 {
+        font-size: 30px;
+    }
+
+    .updated {
+        margin-top: 15px;
+
+        text-align: left;
+    }
+
+    .forecast-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pollutants {
+        grid-template-columns: 1fr;
+    }
+
+    .model-card {
+        display: block;
+    }
+
+    .model-stats {
+        margin-top: 25px;
+    }
+}

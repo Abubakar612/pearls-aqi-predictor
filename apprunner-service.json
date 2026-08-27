@@ -1,0 +1,20 @@
+{
+  "ServiceName": "pearls-aqi-dashboard",
+  "SourceConfiguration": {
+    "AutoDeploymentsEnabled": true,
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::071493957773:role/pearls-aqi-apprunner-ecr-role"
+    },
+    "ImageRepository": {
+      "ImageIdentifier": "071493957773.dkr.ecr.ap-south-1.amazonaws.com/pearls-aqi-dashboard:latest",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "8000"
+      }
+    }
+  },
+  "InstanceConfiguration": {
+    "Cpu": "0.25 vCPU",
+    "Memory": "0.5 GB"
+  }
+}

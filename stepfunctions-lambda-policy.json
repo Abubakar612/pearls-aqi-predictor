@@ -1,0 +1,14 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "lambda:InvokeFunction",
+      "Resource": [
+        "arn:aws:lambda:ap-south-1:071493957773:function:pearls-aqi-collector",
+        "arn:aws:lambda:ap-south-1:071493957773:function:pearls-aqi-features",
+        "arn:aws:lambda:ap-south-1:071493957773:function:pearls-aqi-predictor"
+      ]
+    }
+  ]
+}

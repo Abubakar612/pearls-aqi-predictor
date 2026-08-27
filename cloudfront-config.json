@@ -1,0 +1,59 @@
+{
+  "CallerReference": "pearls-aqi-dashboard-20260818-v2",
+  "Comment": "Pearls AQI Predictor Dashboard",
+  "Enabled": true,
+  "DefaultRootObject": "index.html",
+  "PriceClass": "PriceClass_100",
+
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "pearls-aqi-s3-website",
+        "DomainName": "pearls-aqi-dashboard-071493957773.s3-website.ap-south-1.amazonaws.com",
+        "OriginPath": "",
+        "CustomHeaders": {
+          "Quantity": 0
+        },
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "http-only",
+          "OriginSslProtocols": {
+            "Quantity": 1,
+            "Items": [
+              "TLSv1.2"
+            ]
+          },
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        },
+        "ConnectionAttempts": 3,
+        "ConnectionTimeout": 10
+      }
+    ]
+  },
+
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "pearls-aqi-s3-website",
+    "ViewerProtocolPolicy": "redirect-to-https",
+
+    "AllowedMethods": {
+      "Quantity": 2,
+      "Items": [
+        "GET",
+        "HEAD"
+      ],
+      "CachedMethods": {
+        "Quantity": 2,
+        "Items": [
+          "GET",
+          "HEAD"
+        ]
+      }
+    },
+
+    "Compress": true,
+    "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6"
+  }
+}

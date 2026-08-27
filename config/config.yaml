@@ -1,0 +1,20 @@
+project:
+  name: "Pearls AQI Predictor"
+  version: "0.1.0"
+
+location:
+  city: "Lahore"
+  country: "Pakistan"
+
+forecast:
+  horizon_hours: 72
+
+data:
+  frequency: "hourly"
+
+model:
+  target: "aqi"
+
+api:
+  host: "127.0.0.1"
+  port: 8000

@@ -1,0 +1,1 @@
+{"statusCode": 200, "body": "{\"status\": \"success\", \"timestamp\": \"2026-08-18 15:00:00+00:00\", \"current_aqi\": 108.0, \"features\": 25, \"bucket\": \"pearls-aqi-predictor-071493957773\", \"key\": \"realtime/latest_features.csv\"}"}
