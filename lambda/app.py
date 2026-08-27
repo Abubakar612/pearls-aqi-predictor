@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 from io import BytesIO
 
@@ -29,6 +29,15 @@ MODEL_PREFIX = os.environ.get(
 )
 
 s3_client = boto3.client("s3")
+
+sns_client = boto3.client("sns")
+
+SNS_TOPIC_ARN = os.environ.get(
+    "SNS_TOPIC_ARN",
+    "arn:aws:sns:ap-south-1:071493957773:pearls-aqi-alerts"
+)
+
+HAZARDOUS_AQI_THRESHOLD = 301
 
 
 # ============================================================
@@ -220,6 +229,74 @@ def save_forecast_to_s3(result):
 
 
 # ============================================================
+# HAZARDOUS AQI ALERT
+# ============================================================
+
+def send_hazardous_alert(result):
+
+    hazardous_forecasts = []
+
+    for horizon, forecast in result["forecast"].items():
+
+        if forecast["aqi"] >= HAZARDOUS_AQI_THRESHOLD:
+
+            hazardous_forecasts.append(
+                f"{horizon}: AQI {forecast['aqi']:.2f}"
+            )
+
+    current_aqi = result.get("current_aqi")
+
+    if (
+        current_aqi is not None
+        and current_aqi >= HAZARDOUS_AQI_THRESHOLD
+    ):
+        hazardous_forecasts.append(
+            f"Current: AQI {current_aqi:.2f}"
+        )
+
+    if not hazardous_forecasts:
+        print("No hazardous AQI detected. No alert sent.")
+        return False
+
+    subject = "PEARLS AQI ALERT - Hazardous Air Quality"
+
+    message = (
+        "PEARLS AQI Predictor Hazardous Air Quality Alert\n\n"
+        "Location: Lahore, Pakistan\n"
+        f"Data timestamp: {result.get('data_timestamp')}\n\n"
+        "Hazardous AQI readings/forecasts:\n"
+        + "\n".join(
+            f"- {item}"
+            for item in hazardous_forecasts
+        )
+        + "\n\n"
+        "AQI threshold: 301+\n"
+        "Please take appropriate precautions."
+    )
+
+    try:
+
+        sns_client.publish(
+            TopicArn=SNS_TOPIC_ARN,
+            Subject=subject,
+            Message=message
+        )
+
+        print(
+            "Hazardous AQI alert sent successfully."
+        )
+
+        return True
+
+    except Exception as e:
+
+        print(
+            f"WARNING: Unable to send SNS alert: {e}"
+        )
+
+        return False
+    
+# ============================================================
 # LAMBDA RESPONSE
 # ============================================================
 
@@ -245,6 +322,57 @@ def response(status_code, body):
 def lambda_handler(event, context):
 
     try:
+
+        # ----------------------------------------------------
+        # TEST MODE - HAZARDOUS AQI ALERT
+        # ----------------------------------------------------
+        # Activated only with:
+        # {"test_hazardous_alert": true}
+        # Normal prediction requests are unchanged.
+
+        if event.get("test_hazardous_alert") is True:
+
+            test_result = {
+                "city": "Lahore",
+                "country": "Pakistan",
+                "current_aqi": 350.0,
+                "data_timestamp": "TEST",
+                "pollutants": {
+                    "pm25": 150.0,
+                    "pm10": 300.0,
+                    "no2": 100.0,
+                    "o3": 80.0,
+                    "co": 500.0
+                },
+                "forecast": {
+                    "24h": {
+                        "aqi": 350.0,
+                        "category": "Hazardous"
+                    },
+                    "48h": {
+                        "aqi": 320.0,
+                        "category": "Hazardous"
+                    },
+                    "72h": {
+                        "aqi": 310.0,
+                        "category": "Hazardous"
+                    }
+                }
+            }
+
+            print("Running hazardous AQI alert test...")
+
+            alert_sent = send_hazardous_alert(
+                test_result
+            )
+
+            return response(
+                200,
+                {
+                    "status": "hazardous alert test",
+                    "alert_sent": alert_sent
+                }
+            )
 
         print("=" * 60)
         print("PEARLS AQI PREDICTION LAMBDA")
@@ -484,6 +612,7 @@ def lambda_handler(event, context):
         save_forecast_to_s3(
             result
         )
+        send_hazardous_alert(result)
 
         print(
             "Prediction pipeline completed successfully."

@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 from io import BytesIO
 
@@ -12,14 +12,17 @@ import pandas as pd
 # ============================================================
 
 S3_BUCKET = os.environ["S3_BUCKET"]
+
 INPUT_KEY = os.environ.get(
     "INPUT_KEY",
     "realtime/lahore_hourly.csv"
 )
+
 OUTPUT_KEY = os.environ.get(
     "OUTPUT_KEY",
     "realtime/latest_features.csv"
 )
+
 FEATURE_LIST_KEY = os.environ.get(
     "FEATURE_LIST_KEY",
     "models/production/feature_list.json"
@@ -185,7 +188,9 @@ def calculate_aqi(df):
         "o3_aqi",
     ]
 
-    df["target_aqi"] = df[aqi_columns].max(axis=1)
+    df["target_aqi"] = df[
+        aqi_columns
+    ].max(axis=1)
 
     return df
 
@@ -215,14 +220,21 @@ def create_features(df):
         .reset_index(drop=True)
     )
 
+    # --------------------------------------------------------
     # Time features
+    # --------------------------------------------------------
 
     df["hour"] = df["timestamp"].dt.hour
+
     df["day"] = df["timestamp"].dt.day
+
     df["day_of_week"] = (
         df["timestamp"].dt.dayofweek
     )
-    df["month"] = df["timestamp"].dt.month
+
+    df["month"] = (
+        df["timestamp"].dt.month
+    )
 
     df["is_weekend"] = (
         df["day_of_week"] >= 5
@@ -244,7 +256,9 @@ def create_features(df):
         2 * np.pi * df["day_of_week"] / 7
     )
 
+    # --------------------------------------------------------
     # AQI lags
+    # --------------------------------------------------------
 
     for lag in [1, 3, 6, 12, 24, 48]:
 
@@ -252,7 +266,9 @@ def create_features(df):
             df["target_aqi"].shift(lag)
         )
 
+    # --------------------------------------------------------
     # PM2.5 lags
+    # --------------------------------------------------------
 
     for lag in [1, 3, 6, 12, 24, 48]:
 
@@ -260,7 +276,9 @@ def create_features(df):
             df["pm2_5"].shift(lag)
         )
 
+    # --------------------------------------------------------
     # PM10 lags
+    # --------------------------------------------------------
 
     for lag in [1, 3, 6, 12, 24, 48]:
 
@@ -268,54 +286,72 @@ def create_features(df):
             df["pm10"].shift(lag)
         )
 
-    # AQI rolling
+    # --------------------------------------------------------
+    # AQI rolling features
+    # --------------------------------------------------------
 
     for window in [3, 6, 12, 24, 48]:
 
-        df[f"aqi_rolling_mean_{window}h"] = (
+        df[
+            f"aqi_rolling_mean_{window}h"
+        ] = (
             df["target_aqi"]
             .shift(1)
             .rolling(window)
             .mean()
         )
 
-        df[f"aqi_rolling_std_{window}h"] = (
+        df[
+            f"aqi_rolling_std_{window}h"
+        ] = (
             df["target_aqi"]
             .shift(1)
             .rolling(window)
             .std()
         )
 
-    # PM2.5 rolling
+    # --------------------------------------------------------
+    # PM2.5 rolling features
+    # --------------------------------------------------------
 
     for window in [3, 6, 12, 24]:
 
-        df[f"pm25_rolling_mean_{window}h"] = (
+        df[
+            f"pm25_rolling_mean_{window}h"
+        ] = (
             df["pm2_5"]
             .shift(1)
             .rolling(window)
             .mean()
         )
 
-        df[f"pm25_rolling_std_{window}h"] = (
+        df[
+            f"pm25_rolling_std_{window}h"
+        ] = (
             df["pm2_5"]
             .shift(1)
             .rolling(window)
             .std()
         )
 
-    # PM10 rolling
+    # --------------------------------------------------------
+    # PM10 rolling features
+    # --------------------------------------------------------
 
     for window in [3, 6, 12, 24]:
 
-        df[f"pm10_rolling_mean_{window}h"] = (
+        df[
+            f"pm10_rolling_mean_{window}h"
+        ] = (
             df["pm10"]
             .shift(1)
             .rolling(window)
             .mean()
         )
 
+    # --------------------------------------------------------
     # AQI changes
+    # --------------------------------------------------------
 
     df["aqi_change_1h"] = (
         df["target_aqi"].shift(1)
@@ -329,7 +365,9 @@ def create_features(df):
         df["target_aqi"].shift(4)
     )
 
+    # --------------------------------------------------------
     # PM2.5 changes
+    # --------------------------------------------------------
 
     df["pm25_change_1h"] = (
         df["pm2_5"].shift(1)
@@ -343,7 +381,9 @@ def create_features(df):
         df["pm2_5"].shift(4)
     )
 
+    # --------------------------------------------------------
     # PM10 changes
+    # --------------------------------------------------------
 
     df["pm10_change_1h"] = (
         df["pm10"].shift(1)
@@ -388,34 +428,52 @@ def read_feature_list():
         Key=FEATURE_LIST_KEY
     )
 
-    content = obj["Body"].read().decode("utf-8")
+    content = (
+        obj["Body"]
+        .read()
+        .decode("utf-8")
+    )
 
-    feature_list = json.loads(content)
+    feature_list = json.loads(
+        content
+    )
 
     if isinstance(feature_list, dict):
 
         if "features" in feature_list:
 
-            feature_list = feature_list["features"]
+            feature_list = (
+                feature_list["features"]
+            )
 
         else:
 
             raise ValueError(
-                "feature_list.json does not contain 'features'."
+                "feature_list.json does not contain "
+                "'features'."
             )
 
-    if not isinstance(feature_list, list):
+    if not isinstance(
+        feature_list,
+        list
+    ):
 
         raise ValueError(
             "Invalid feature_list.json format."
         )
 
     return list(
-        dict.fromkeys(feature_list)
+        dict.fromkeys(
+            feature_list
+        )
     )
 
 
-def write_csv_to_s3(df, bucket, key):
+def write_csv_to_s3(
+    df,
+    bucket,
+    key
+):
 
     buffer = BytesIO()
 
@@ -438,13 +496,20 @@ def write_csv_to_s3(df, bucket, key):
 # LAMBDA HANDLER
 # ============================================================
 
-def lambda_handler(event, context):
+def lambda_handler(
+    event,
+    context
+):
 
     try:
 
         print("=" * 60)
         print("PEARLS AQI FEATURE GENERATOR")
         print("=" * 60)
+
+        # ----------------------------------------------------
+        # Load realtime data
+        # ----------------------------------------------------
 
         print(
             f"Reading s3://{S3_BUCKET}/{INPUT_KEY}"
@@ -464,7 +529,13 @@ def lambda_handler(event, context):
             ~df.columns.duplicated()
         ]
 
-        print("Calculating AQI...")
+        # ----------------------------------------------------
+        # Calculate AQI
+        # ----------------------------------------------------
+
+        print(
+            "Calculating AQI..."
+        )
 
         df = calculate_aqi(df)
 
@@ -474,9 +545,21 @@ def lambda_handler(event, context):
                 "target_aqi was not created."
             )
 
-        print("Creating features...")
+        # ----------------------------------------------------
+        # Generate all available features
+        # ----------------------------------------------------
 
-        df = create_features(df)
+        print(
+            "Creating features..."
+        )
+
+        df = create_features(
+            df
+        )
+
+        # ----------------------------------------------------
+        # Load production feature list
+        # ----------------------------------------------------
 
         feature_list = read_feature_list()
 
@@ -484,6 +567,10 @@ def lambda_handler(event, context):
             f"Production features: "
             f"{len(feature_list)}"
         )
+
+        # ----------------------------------------------------
+        # Validate production features
+        # ----------------------------------------------------
 
         missing = [
             feature
@@ -498,27 +585,63 @@ def lambda_handler(event, context):
                 + ", ".join(missing)
             )
 
+        print(
+            "All production features found."
+        )
+
+        # ----------------------------------------------------
+        # Prepare output columns
+        # ----------------------------------------------------
+
+        output_columns = [
+            "timestamp",
+            "target_aqi",
+            "pm2_5",
+            "pm10",
+            "no2",
+            "o3",
+            "co",
+            *feature_list
+        ]
+
         output_columns = list(
             dict.fromkeys(
-                [
-                    "timestamp",
-                    "target_aqi",
-                    "pm2_5",
-                    "pm10",
-                    "no2",
-                    "o3",
-                    "co",
-                    *feature_list
-                ]
+                output_columns
             )
         )
+
+        # ----------------------------------------------------
+        # Validate output columns
+        # ----------------------------------------------------
+
+        missing_output_columns = [
+            column
+            for column in output_columns
+            if column not in df.columns
+        ]
+
+        if missing_output_columns:
+
+            raise ValueError(
+                "Cannot create realtime feature file. "
+                "Missing columns: "
+                + ", ".join(
+                    missing_output_columns
+                )
+            )
+
+        # ----------------------------------------------------
+        # Select latest complete observation
+        # ----------------------------------------------------
 
         latest = (
             df[output_columns]
             .dropna(
                 subset=feature_list
             )
-            .sort_values("timestamp")
+            .sort_values(
+                "timestamp"
+            )
             .tail(1)
             .copy()
         )
@@ -534,38 +657,73 @@ def lambda_handler(event, context):
             ~latest.columns.duplicated()
         ]
 
+        # ----------------------------------------------------
+        # Validate model input
+        # ----------------------------------------------------
+
         model_input = latest[
             feature_list
         ]
 
         if model_input.isnull().any().any():
 
-            raise ValueError(
-                "Missing values detected."
+            missing_values = (
+                model_input
+                .isnull()
+                .sum()
             )
 
+            missing_values = (
+                missing_values[
+                    missing_values > 0
+                ]
+            )
+
+            raise ValueError(
+                "Missing values detected: "
+                + str(
+                    missing_values.to_dict()
+                )
+            )
+
+        # ----------------------------------------------------
+        # Latest information
+        # ----------------------------------------------------
+
         latest_timestamp = str(
-            latest["timestamp"].iloc[0]
+            latest[
+                "timestamp"
+            ].iloc[0]
         )
 
         current_aqi = float(
-            latest["target_aqi"].iloc[0]
+            latest[
+                "target_aqi"
+            ].iloc[0]
         )
 
         print(
-            f"Latest timestamp: {latest_timestamp}"
+            f"Latest timestamp: "
+            f"{latest_timestamp}"
         )
 
         print(
-            f"Current AQI: {current_aqi:.2f}"
+            f"Current AQI: "
+            f"{current_aqi:.2f}"
         )
 
         print(
-            f"Features: {len(feature_list)}"
+            f"Features: "
+            f"{len(feature_list)}"
         )
 
+        # ----------------------------------------------------
+        # Save features to S3
+        # ----------------------------------------------------
+
         print(
-            f"Writing s3://{S3_BUCKET}/{OUTPUT_KEY}"
+            f"Writing "
+            f"s3://{S3_BUCKET}/{OUTPUT_KEY}"
         )
 
         write_csv_to_s3(
@@ -573,6 +731,14 @@ def lambda_handler(event, context):
             S3_BUCKET,
             OUTPUT_KEY
         )
+
+        print(
+            "Feature generation completed successfully."
+        )
+
+        # ----------------------------------------------------
+        # Return success
+        # ----------------------------------------------------
 
         return {
             "statusCode": 200,
